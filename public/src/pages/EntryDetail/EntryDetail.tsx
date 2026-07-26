@@ -4,11 +4,17 @@ import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
 import { fetchEntry } from '@/services/api';
 import type { Entry } from '@/services/api';
 import { extractYoutubeId } from '@/lib/youtube';
+import { useProject } from '@/contexts/ProjectContext';
 
-function getPdfEmbedUrl(url: string): string | null {
+// Handles Drive-hosted PDFs (/file/d/<id>), native Google Docs/Sheets/Slides
+// (/document|spreadsheets|presentation/d/<id>), the older ?id= share format,
+// and any plain .pdf URL.
+function getDocEmbedUrl(url: string): string | null {
   if (!url) return null;
   const driveFile = url.match(/\/file\/d\/([^/?#]+)/);
   if (driveFile) return `https://drive.google.com/file/d/${driveFile[1]}/preview`;
+  const googleDoc = url.match(/docs\.google\.com\/(document|spreadsheets|presentation)\/d\/([^/?#]+)/);
+  if (googleDoc) return `https://docs.google.com/${googleDoc[1]}/d/${googleDoc[2]}/preview`;
   const driveOpen = url.match(/[?&]id=([^&#]+)/);
   if (driveOpen) return `https://drive.google.com/file/d/${driveOpen[1]}/preview`;
   if (url.endsWith('.pdf') || url.includes('.pdf?')) return url;
@@ -16,14 +22,15 @@ function getPdfEmbedUrl(url: string): string | null {
 }
 
 const EntryDetail: React.FC = () => {
+  const project = useProject();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [entry, setEntry] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchEntry(parseInt(id!)).then((r) => setEntry(r.data)).catch(console.error).finally(() => setLoading(false));
-  }, [id]);
+    fetchEntry(project, parseInt(id!)).then((r) => setEntry(r.data)).catch(console.error).finally(() => setLoading(false));
+  }, [project, id]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}><Loader2 className="animate-spin" style={{ color: 'var(--ps-accent)' }} /></div>;
@@ -32,7 +39,7 @@ const EntryDetail: React.FC = () => {
     return <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--ps-muted)' }}>Not found</div>;
   }
 
-  const pdfEmbed = getPdfEmbedUrl(entry.link_to_pdf_document);
+  const pdfEmbed = getDocEmbedUrl(entry.link_to_pdf_document);
   const videoIds = (entry.youtube_video_links || []).map(extractYoutubeId).filter(Boolean) as string[];
 
   return (
@@ -59,7 +66,7 @@ const EntryDetail: React.FC = () => {
       {pdfEmbed && (
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)' }}>PDF Document</span>
+            <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)' }}>Document</span>
             <a href={entry.link_to_pdf_document} target="_blank" rel="noopener"
               style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: 'var(--ps-accent-text)' }}>
               <ExternalLink style={{ width: 13, height: 13 }} /> Open

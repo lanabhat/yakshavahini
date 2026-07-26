@@ -4,8 +4,10 @@ import { Search, Loader2, X } from 'lucide-react';
 import { filterEntries } from '@/services/api';
 import type { Entry, SortField, SortOrder } from '@/services/api';
 import EntryCard from '@/components/EntryCard/EntryCard';
+import { useProject } from '@/contexts/ProjectContext';
 
 const Library: React.FC = () => {
+  const project = useProject();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchText, setSearchText] = useState(searchParams.get('q') ?? '');
   const [sortField, setSortField] = useState<SortField>('entry_id');
@@ -17,7 +19,7 @@ const Library: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await filterEntries({
+      const res = await filterEntries(project, {
         fstring: searchText.length >= 2 ? searchText : undefined,
         sort: sortField,
         order: sortOrder,
@@ -29,7 +31,7 @@ const Library: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchText, sortField, sortOrder]);
+  }, [project, searchText, sortField, sortOrder]);
 
   useEffect(() => {
     const t = setTimeout(load, 300);

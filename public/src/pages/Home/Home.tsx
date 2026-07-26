@@ -3,24 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { fetchStats } from '@/services/api';
 import type { StatsData } from '@/services/api';
 import EntryCard from '@/components/EntryCard/EntryCard';
-import { PROJECT } from '@/config/project';
+import { useProject } from '@/contexts/ProjectContext';
 
 const Home: React.FC = () => {
+  const project = useProject();
   const navigate = useNavigate();
   const [stats, setStats] = useState<StatsData | null>(null);
 
   useEffect(() => {
-    fetchStats().then((r) => setStats(r.data)).catch(console.error);
-  }, []);
+    fetchStats(project).then((r) => setStats(r.data)).catch(console.error);
+  }, [project]);
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 22px 60px' }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
         <h1 className="kn-serif" style={{ fontWeight: 700, fontSize: 'clamp(28px, 5vw, 44px)', color: 'var(--ps-text)', margin: '0 0 12px' }}>
-          {PROJECT.nameKannada}
+          {project.nameKannada}
         </h1>
         <p style={{ color: 'var(--ps-muted)', fontSize: 15 }}>{stats?.total ?? 0} entries</p>
-        <button onClick={() => navigate('/library')}
+        <button onClick={() => navigate(`/${project.slug}/library`)}
           style={{
             marginTop: 20, background: 'var(--ps-grad)', color: '#fff', border: 'none',
             borderRadius: 999, padding: '12px 26px', fontSize: 14.5, fontWeight: 600, cursor: 'pointer',

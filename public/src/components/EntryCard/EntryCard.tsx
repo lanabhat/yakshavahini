@@ -1,12 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Entry } from '@/services/api';
+import { useProject } from '@/contexts/ProjectContext';
 
 interface Props {
   entry: Entry;
 }
 
 const EntryCard: React.FC<Props> = ({ entry }) => {
+  const project = useProject();
   const navigate = useNavigate();
   const hasPdf = !!entry.link_to_pdf_document;
   const hasVideo = entry.youtube_video_links && entry.youtube_video_links.length > 0;
@@ -14,7 +16,7 @@ const EntryCard: React.FC<Props> = ({ entry }) => {
 
   return (
     <div
-      onClick={() => navigate(`/entry/${entry.id}`)}
+      onClick={() => navigate(`/${project.slug}/entry/${entry.id}`)}
       style={{
         background: 'var(--ps-surface)', border: '1px solid var(--ps-border)',
         borderRadius: 16, padding: 16, cursor: 'pointer',

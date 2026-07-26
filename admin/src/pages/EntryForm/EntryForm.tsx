@@ -28,7 +28,7 @@ const EntryForm: React.FC = () => {
         </div>
 
         <div>
-          <label style={labelStyle}>PDF Document</label>
+          <label style={labelStyle}>Drive Document</label>
           {s.linkToPdfDocument ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <a href={s.linkToPdfDocument} target="_blank" rel="noopener" style={{ fontSize: 13, color: 'var(--ps-accent-text)', wordBreak: 'break-all' }}>
@@ -40,6 +40,22 @@ const EntryForm: React.FC = () => {
             </div>
           ) : (
             <>
+              <label style={{ ...labelStyle, fontWeight: 400, fontSize: 12 }}>Paste a link to a document already on Drive (PDF or Google Doc)</label>
+              <input
+                placeholder="https://drive.google.com/file/d/... or https://docs.google.com/document/d/..."
+                style={{ ...inputStyle, marginBottom: 14 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    s.setLinkToPdfDocument((e.target as HTMLInputElement).value.trim());
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value.trim()) s.setLinkToPdfDocument(e.target.value.trim());
+                }}
+              />
+
+              <label style={{ ...labelStyle, fontWeight: 400, fontSize: 12 }}>Or upload a new PDF</label>
               <input value={s.driveFileName} onChange={(e) => s.setDriveFileName(e.target.value)}
                 placeholder="Drive file name (optional)" style={{ ...inputStyle, marginBottom: 8 }} />
               <input ref={s.fileRef} type="file" accept="application/pdf" onChange={s.handleFileChange} disabled={s.uploading} />
