@@ -16,7 +16,7 @@ const EntryCard: React.FC<Props> = ({ entry }) => {
 
   return (
     <div
-      onClick={() => navigate(`/${project.slug}/entry/${entry.id}`)}
+      onClick={() => navigate(`/${project.slug}/app/entry/${entry.id}`)}
       style={{
         background: 'var(--ps-surface)', border: '1px solid var(--ps-border)',
         borderRadius: 16, padding: 16, cursor: 'pointer',

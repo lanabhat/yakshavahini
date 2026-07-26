@@ -21,7 +21,7 @@ const Home: React.FC = () => {
           {project.nameKannada}
         </h1>
         <p style={{ color: 'var(--ps-muted)', fontSize: 15 }}>{stats?.total ?? 0} entries</p>
-        <button onClick={() => navigate(`/${project.slug}/library`)}
+        <button onClick={() => navigate(`/${project.slug}/app/library`)}
           style={{
             marginTop: 20, background: 'var(--ps-grad)', color: '#fff', border: 'none',
             borderRadius: 999, padding: '12px 26px', fontSize: 14.5, fontWeight: 600, cursor: 'pointer',

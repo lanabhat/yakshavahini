@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, LayoutGrid } from 'lucide-react';
+import { Search, LayoutGrid, ArrowLeft } from 'lucide-react';
 import { useProject } from '@/contexts/ProjectContext';
 
 const Navbar: React.FC = () => {
@@ -10,14 +10,18 @@ const Navbar: React.FC = () => {
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && query.trim()) {
-      navigate(`/${project.slug}/library?q=${encodeURIComponent(query.trim())}`);
+      navigate(`/${project.slug}/app/library?q=${encodeURIComponent(query.trim())}`);
     }
   };
 
   return (
     <header style={{ background: 'var(--ps-bg)', borderBottom: '1px solid var(--ps-border)' }} className="sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-5 h-14 flex items-center gap-5">
-        <Link to={`/${project.slug}`} className="flex items-center gap-2.5 shrink-0">
+        <Link to={`/${project.slug}`} title="Back to about" className="flex items-center" style={{ color: 'var(--ps-faint)' }}>
+          <ArrowLeft style={{ width: 17, height: 17 }} />
+        </Link>
+
+        <Link to={`/${project.slug}/app`} className="flex items-center gap-2.5 shrink-0">
           <div style={{
             width: 36, height: 36, borderRadius: 10, background: 'var(--ps-grad)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -41,7 +45,7 @@ const Navbar: React.FC = () => {
         <Link to="/" title="All projects" className="flex items-center" style={{ color: 'var(--ps-faint)' }}>
           <LayoutGrid style={{ width: 16, height: 16 }} />
         </Link>
-        <Link to={`/${project.slug}/library`} className="kn-sans" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-muted)' }}>Library</Link>
+        <Link to={`/${project.slug}/app/library`} className="kn-sans" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-muted)' }}>Library</Link>
       </div>
     </header>
   );
