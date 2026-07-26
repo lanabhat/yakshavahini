@@ -13,9 +13,9 @@ const App: React.FC = () => {
       <div className="min-h-screen" style={{ background: 'var(--ps-bg)' }}>
         <Routes>
           <Route path="/" element={<ProjectPicker />} />
-          <Route path="/mattukosha" element={<MattukoshaLanding />} />
-          <Route path="/:project/app" element={<ProjectLayout />}>
-            <Route index element={<Home />} />
+          <Route path="/:project" element={<ProjectLayout />}>
+            <Route index element={<MattukoshaLanding />} />
+            <Route path="home" element={<Home />} />
             <Route path="library" element={<Library />} />
             <Route path="entry/:id" element={<EntryDetail />} />
           </Route>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { PROJECTS } from '@/config/projects';
 
 const paragraphStyle: React.CSSProperties = {
   fontSize: 15.5, lineHeight: 1.9, color: 'var(--ps-text)', marginBottom: 20,
@@ -44,7 +45,7 @@ const MattukoshaLanding: React.FC = () => {
            the reader has scrolled past the halfway point of the article, and
            hides again while the inline button below is itself visible ── */}
       <Link
-        to="/mattukosha/app"
+        to="/mattukosha/library"
         title="ಮಟ್ಟುಕೋಶ ಪ್ರವೇಶಿಸಿ"
         style={{
           position: 'fixed', top: '50%', right: floatingButtonVisible ? 18 : -80,
@@ -131,7 +132,7 @@ const MattukoshaLanding: React.FC = () => {
         </p>
 
         <div style={{ textAlign: 'center', margin: '32px 0' }}>
-          <Link ref={inlineButtonRef} to="/mattukosha/app/library" style={{
+          <Link ref={inlineButtonRef} to="/mattukosha/library" style={{
             display: 'inline-block', background: 'var(--ps-grad)', color: '#fff', textDecoration: 'none',
             borderRadius: 999, padding: '14px 30px', fontWeight: 700, fontSize: 15.5,
             boxShadow: 'var(--ps-shadow-md)',
@@ -151,6 +152,38 @@ const MattukoshaLanding: React.FC = () => {
           <p style={{ margin: 0 }}>ಶ್ರೀ ಅಜಿತ್‌ ಕಾರಂತ್‌, ಪ್ರಧಾನ ಸಂಪಾದಕರು</p>
           <p style={{ margin: 0 }}>ಶ್ರೀಮತಿ ಅಶ್ವಿನಿ ಹೊದಲ, ಸಹ ಸಂಪಾದಕರು</p>
           <p style={{ margin: 0 }}>ಡಾ. ಆನಂದರಾಮ ಉಪಾಧ್ಯ, ಶ್ರೀ ನಟರಾಜ ಉಪಾಧ್ಯ, ಶ್ರೀ ರವಿ ಮಡೋಡಿ (ವಿಶ್ವಸ್ಥರು, ಯಕ್ಷವಾಹಿನಿ ಸಂಸ್ಥೆ)</p>
+        </div>
+      </div>
+
+      {/* ── Other Yakshavahini projects ─────────────────────────────────── */}
+      <div style={{ borderTop: '1px solid var(--ps-border)', padding: '36px 22px 48px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <h2 className="kn-serif" style={{ fontSize: 16, fontWeight: 700, color: 'var(--ps-muted)', marginBottom: 16, textAlign: 'center' }}>
+            ಯಕ್ಷವಾಹಿನಿಯ ಇತರ ಯೋಜನೆಗಳು
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+            {PROJECTS.map((p) => (
+              p.active ? (
+                <Link key={p.slug} to={`/${p.slug}`} style={{
+                  display: 'flex', flexDirection: 'column', gap: 4, textDecoration: 'none',
+                  background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', borderRadius: 12,
+                  padding: '14px 16px', textAlign: 'center',
+                }}>
+                  <span className="kn-serif" style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--ps-text)' }}>{p.nameKannada}</span>
+                  <span style={{ fontSize: 11.5, color: 'var(--ps-muted)' }}>{p.name}</span>
+                </Link>
+              ) : (
+                <div key={p.slug} style={{
+                  display: 'flex', flexDirection: 'column', gap: 4,
+                  background: 'var(--ps-surface-2)', border: '1px dashed var(--ps-border)', borderRadius: 12,
+                  padding: '14px 16px', textAlign: 'center', opacity: 0.6,
+                }}>
+                  <span className="kn-serif" style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--ps-muted)' }}>{p.nameKannada}</span>
+                  <span style={{ fontSize: 11.5, color: 'var(--ps-faint)' }}>{p.name} · Coming soon</span>
+                </div>
+              )
+            ))}
+          </div>
         </div>
       </div>
     </div>
