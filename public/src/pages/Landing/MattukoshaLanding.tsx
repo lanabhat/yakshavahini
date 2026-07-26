@@ -8,7 +8,9 @@ const paragraphStyle: React.CSSProperties = {
 
 const MattukoshaLanding: React.FC = () => {
   const [showEnterButton, setShowEnterButton] = useState(false);
+  const [inlineButtonVisible, setInlineButtonVisible] = useState(false);
   const articleRef = useRef<HTMLDivElement>(null);
+  const inlineButtonRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,22 +24,37 @@ const MattukoshaLanding: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Hide the floating button while the inline "enter" button (further down
+  // the article) is itself on screen, so the two never show at once.
+  useEffect(() => {
+    const el = inlineButtonRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInlineButtonVisible(entry.isIntersecting),
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const floatingButtonVisible = showEnterButton && !inlineButtonVisible;
+
   return (
     <div style={{ background: 'var(--ps-bg)', minHeight: '100vh' }}>
       {/* ── Floating "enter the app" button — slides in from the right once
-           the reader has scrolled past the halfway point of the article ── */}
+           the reader has scrolled past the halfway point of the article, and
+           hides again while the inline button below is itself visible ── */}
       <Link
         to="/mattukosha/app"
-        title="ಯಕ್ಷಮಟ್ಟುಕೋಶ ಪ್ರವೇಶಿಸಿ"
+        title="ಮಟ್ಟುಕೋಶ ಪ್ರವೇಶಿಸಿ"
         style={{
-          position: 'fixed', top: '50%', right: showEnterButton ? 18 : -80,
+          position: 'fixed', top: '50%', right: floatingButtonVisible ? 18 : -80,
           transform: 'translateY(-50%)', zIndex: 60,
           display: 'flex', alignItems: 'center', gap: 8,
           background: 'var(--ps-grad)', color: '#fff', textDecoration: 'none',
           borderRadius: 999, padding: '14px 20px 14px 16px',
           boxShadow: 'var(--ps-shadow-md)',
           transition: 'right .35s ease, opacity .35s ease',
-          opacity: showEnterButton ? 1 : 0,
+          opacity: floatingButtonVisible ? 1 : 0,
         }}
       >
         <ArrowRight style={{ width: 18, height: 18 }} />
@@ -114,12 +131,12 @@ const MattukoshaLanding: React.FC = () => {
         </p>
 
         <div style={{ textAlign: 'center', margin: '32px 0' }}>
-          <Link to="/mattukosha/app/library" style={{
+          <Link ref={inlineButtonRef} to="/mattukosha/app/library" style={{
             display: 'inline-block', background: 'var(--ps-grad)', color: '#fff', textDecoration: 'none',
             borderRadius: 999, padding: '14px 30px', fontWeight: 700, fontSize: 15.5,
             boxShadow: 'var(--ps-shadow-md)',
           }}>
-            ಯಕ್ಷಮಟ್ಟುಕೋಶದ ಕೋಷ್ಟಕ
+            ಮಟ್ಟುಕೋಶ ಪ್ರವೇಶಿಸಿ
           </Link>
         </div>
 
