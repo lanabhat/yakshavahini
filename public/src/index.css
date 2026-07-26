@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 14%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 95%;
+    --secondary-foreground: 222 47% 16%;
+    --muted: 214 32% 95%;
+    --muted-foreground: 215 16% 45%;
+    --accent: 214 95% 93%;
+    --accent-foreground: 221 83% 40%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 90%;
+    --input: 214 32% 90%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem;
+  }
+}
+
+/* ── Design tokens — Simple theme (light, blue, white backgrounds) ───────── */
+:root {
+  --ps-bg: #FFFFFF;
+  --ps-surface: #FFFFFF;
+  --ps-surface-2: #F1F5F9;
+  --ps-text: #1E293B;
+  --ps-muted: #64748B;
+  --ps-faint: #94A3B8;
+  --ps-border: #E2E8F0;
+  --ps-accent: #2563EB;        /* blue */
+  --ps-accent-2: #0EA5E9;      /* sky blue */
+  --ps-accent-text: #1D4ED8;   /* deeper blue for text contrast */
+  --ps-accent-soft: #DBEAFE;
+  --ps-grad: linear-gradient(135deg, #2563EB, #0EA5E9);
+  --ps-shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+  --ps-shadow-md: 0 6px 22px rgba(15,23,42,.10);
+  --ps-font-display: 'Source Serif 4', serif;
+  /* Spine palette — per-card cover colours (bg | ink) */
+  --spine-1-bg: #2563EB; --spine-1-ink: #FFFFFF;
+  --spine-2-bg: #0F766E; --spine-2-ink: #FFFFFF;
+  --spine-3-bg: #0EA5E9; --spine-3-ink: #FFFFFF;
+  --spine-4-bg: #334155; --spine-4-ink: #FFFFFF;
+  --spine-5-bg: #E2E8F0; --spine-5-ink: #1E293B;
+  --spine-6-bg: #1D4ED8; --spine-6-ink: #FFFFFF;
+}
+
+/* ── Library theme (Direction A — scholarly, warm paper, terracotta+gold) ── */
+[data-theme="library"] {
+  --ps-bg: #faf7f2;
+  --ps-surface: #ffffff;
+  --ps-surface-2: #f2ede4;
+  --ps-text: #1a1512;
+  --ps-muted: #6b6157;
+  --ps-faint: #a89e8a;
+  --ps-border: #d9d0c2;
+  --ps-accent: #8a3a1f;        /* terracotta */
+  --ps-accent-2: #c4a05a;      /* gold */
+  --ps-accent-text: #8a3a1f;
+  --ps-accent-soft: #f0e4d8;
+  --ps-grad: linear-gradient(135deg, #8a3a1f, #c4a05a);
+  --ps-shadow-sm: 0 1px 3px rgba(26,21,18,.06);
+  --ps-shadow-md: 0 6px 22px rgba(26,21,18,.12);
+  --ps-font-display: 'Lora', serif;
+  --spine-1-bg: #8a3a1f; --spine-1-ink: #faf7f2;
+  --spine-2-bg: #2e4a3a; --spine-2-ink: #faf7f2;
+  --spine-3-bg: #c4a05a; --spine-3-ink: #1a1512;
+  --spine-4-bg: #3a3a5a; --spine-4-ink: #faf7f2;
+  --spine-5-bg: #f0e4d8; --spine-5-ink: #1a1512;
+  --spine-6-bg: #5a2a1a; --spine-6-ink: #faf7f2;
+}
+
+/* ── Dark theme (Direction B — bold heritage, near-black, terracotta+gold) ─ */
+[data-theme="dark"] {
+  --ps-bg: #1a0f0a;
+  --ps-surface: #231610;
+  --ps-surface-2: #2c1c13;
+  --ps-text: #f5ecdc;
+  --ps-muted: #a89880;
+  --ps-faint: #7d6f5c;
+  --ps-border: #3a2a1e;
+  --ps-accent: #e85d3a;        /* bright terracotta */
+  --ps-accent-2: #d4a340;      /* gold */
+  --ps-accent-text: #e85d3a;
+  --ps-accent-soft: #3a2016;
+  --ps-grad: linear-gradient(135deg, #e85d3a, #d4a340);
+  --ps-shadow-sm: 0 0 0 1px #3a2a1e;
+  --ps-shadow-md: 0 0 0 1px #4a3524, 0 6px 18px rgba(0,0,0,.55);
+  --ps-font-display: 'Playfair Display', serif;
+  --spine-1-bg: #e85d3a; --spine-1-ink: #1a0f0a;
+  --spine-2-bg: #d4a340; --spine-2-ink: #1a0f0a;
+  --spine-3-bg: #231610; --spine-3-ink: #f5ecdc;
+  --spine-4-bg: #4a2a1e; --spine-4-ink: #f5ecdc;
+  --spine-5-bg: #2e4a3a; --spine-5-ink: #f5ecdc;
+  --spine-6-bg: #5a2a1a; --spine-6-ink: #f5ecdc;
+}
+
+@layer base {
+  body {
+    background: var(--ps-bg);
+    color: var(--ps-text);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ── Font utilities ──────────────────────────────────────── */
+.ps-serif { font-family: 'Source Serif 4', serif; }
+.kn-serif { font-family: 'Noto Serif Kannada', serif; }
+.kn-sans  { font-family: 'Noto Sans Kannada', sans-serif; }
+
+/* Legacy Kannada class kept for backward compat */
+.kn, [lang="kn"] {
+  font-family: 'Noto Sans Kannada', system-ui, sans-serif;
+}
+
+/* WordPress post content */
+.wp-content p { margin-bottom: 0.9rem; line-height: 1.75; color: var(--ps-text); }
+.wp-content h1, .wp-content h2, .wp-content h3 { font-weight: 700; color: var(--ps-text); margin: 1.25rem 0 0.5rem; }
+.wp-content h2 { font-size: 1.2rem; }
+.wp-content h3 { font-size: 1.05rem; }
+.wp-content a { color: var(--ps-accent-text); text-decoration: underline; }
+.wp-content img { max-width: 100%; border-radius: 0.5rem; margin: 0.75rem 0; }
+.wp-content ul, .wp-content ol { padding-left: 1.5rem; margin-bottom: 0.9rem; }
+.wp-content li { margin-bottom: 0.25rem; }
+.wp-content blockquote { border-left: 3px solid var(--ps-accent-soft); padding-left: 1rem; color: var(--ps-muted); font-style: italic; margin: 1rem 0; }
+.wp-content figure { margin: 1rem 0; }
+.wp-content figcaption { font-size: 0.75rem; color: var(--ps-faint); text-align: center; margin-top: 0.25rem; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ps-border); border-radius: 3px; }
+
+/* Display-font utility — switches per theme */
+.ps-display { font-family: var(--ps-font-display, 'Source Serif 4', serif); }
+
+/* Hide scrollbar on horizontal carousels while keeping scroll/swipe */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

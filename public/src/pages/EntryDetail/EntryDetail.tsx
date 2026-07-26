@@ -1,0 +1,94 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
+import { fetchEntry } from '@/services/api';
+import type { Entry } from '@/services/api';
+import { extractYoutubeId } from '@/lib/youtube';
+
+function getPdfEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  const driveFile = url.match(/\/file\/d\/([^/?#]+)/);
+  if (driveFile) return `https://drive.google.com/file/d/${driveFile[1]}/preview`;
+  const driveOpen = url.match(/[?&]id=([^&#]+)/);
+  if (driveOpen) return `https://drive.google.com/file/d/${driveOpen[1]}/preview`;
+  if (url.endsWith('.pdf') || url.includes('.pdf?')) return url;
+  return null;
+}
+
+const EntryDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [entry, setEntry] = useState<Entry | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEntry(parseInt(id!)).then((r) => setEntry(r.data)).catch(console.error).finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}><Loader2 className="animate-spin" style={{ color: 'var(--ps-accent)' }} /></div>;
+  }
+  if (!entry) {
+    return <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--ps-muted)' }}>Not found</div>;
+  }
+
+  const pdfEmbed = getPdfEmbedUrl(entry.link_to_pdf_document);
+  const videoIds = (entry.youtube_video_links || []).map(extractYoutubeId).filter(Boolean) as string[];
+
+  return (
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: '22px 22px 60px' }}>
+      <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--ps-muted)', cursor: 'pointer', marginBottom: 18, fontSize: 13.5 }}>
+        <ArrowLeft style={{ width: 15, height: 15 }} /> Back
+      </button>
+
+      <h1 className="kn-serif" style={{ fontWeight: 700, fontSize: 26, color: 'var(--ps-text)', margin: '0 0 14px' }}>
+        {entry.name_of_the_mattu}
+      </h1>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 22 }}>
+        {entry.date_kannada && <span className="kn-sans" style={{ fontSize: 13.5, color: 'var(--ps-muted)' }}>{entry.date_kannada}</span>}
+        {entry.date_english && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: 'var(--ps-faint)' }}>{entry.date_english}</span>}
+      </div>
+
+      {entry.notes && (
+        <div style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', borderRadius: 14, padding: 16, marginBottom: 22 }}>
+          <p style={{ fontSize: 14, color: 'var(--ps-text)', margin: 0, lineHeight: 1.6 }}>{entry.notes}</p>
+        </div>
+      )}
+
+      {pdfEmbed && (
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)' }}>PDF Document</span>
+            <a href={entry.link_to_pdf_document} target="_blank" rel="noopener"
+              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: 'var(--ps-accent-text)' }}>
+              <ExternalLink style={{ width: 13, height: 13 }} /> Open
+            </a>
+          </div>
+          <iframe src={pdfEmbed} title={entry.name_of_the_mattu} style={{ width: '100%', height: '70vh', border: '1px solid var(--ps-border)', borderRadius: 12 }} />
+        </div>
+      )}
+
+      {videoIds.length > 0 && (
+        <div>
+          <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)', display: 'block', marginBottom: 8 }}>Videos</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+            {videoIds.map((vid) => (
+              <div key={vid} style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--ps-border)' }}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${vid}`}
+                  title={`YouTube video ${vid}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EntryDetail;
