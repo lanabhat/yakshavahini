@@ -1,12 +1,12 @@
 import secrets
 
+import requests
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from googleapiclient.discovery import build as build_drive_service
 
 from .models import DriveAccount
 from .permissions import IsAdmin
@@ -159,9 +159,19 @@ class DriveOAuthCallbackView(APIView):
             flow.fetch_token(code=code)
             creds = flow.credentials
 
-            service = build_drive_service('drive', 'v3', credentials=creds, cache_discovery=False)
-            about = service.about().get(fields='user').execute()
-            email = about.get('user', {}).get('emailAddress') or 'Connected account'
+            # Plain `requests` rather than googleapiclient's build() service —
+            # that service's httplib2 transport doesn't honor the outbound
+            # proxy PythonAnywhere requires for non-whitelisted hosts (this
+            # broke the equivalent call in the sibling Pratisangraha backend
+            # with "[Errno 101] Network is unreachable" once deployed there),
+            # while plain `requests` calls do respect that proxy config.
+            about_resp = requests.get(
+                'https://www.googleapis.com/drive/v3/about',
+                headers={'Authorization': f'Bearer {creds.token}'},
+                params={'fields': 'user'},
+            )
+            about_resp.raise_for_status()
+            email = about_resp.json().get('user', {}).get('emailAddress') or 'Connected account'
 
             label = email
             suffix = 2

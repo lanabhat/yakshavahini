@@ -18,7 +18,6 @@ import requests
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials as UserCredentials
 from google.auth.transport.requests import Request as GoogleAuthRequest
-from googleapiclient.discovery import build
 from django.conf import settings
 
 from .models import DriveAccount
@@ -87,10 +86,6 @@ def _get_credentials(drive_account):
     return creds
 
 
-def _build_service(drive_account):
-    return build('drive', 'v3', credentials=_get_credentials(drive_account), cache_discovery=False)
-
-
 def start_resumable_upload_session(schema, entry, user_file_name, drive_account_id=None):
     """Opens a Drive resumable-upload session and returns
     (drive_account, access_token, upload_url, file_name) — the browser then
@@ -125,26 +120,53 @@ def find_and_finalize_upload(drive_account, file_name):
     the exact name the backend assigned — drive.file scope means only files
     this app's account created are visible, so there's no risk of matching
     an unrelated file), retrying briefly for any propagation delay, then
-    shares it and returns (drive_file_id, web_view_link)."""
-    service = _build_service(drive_account)
-    files = []
+    shares it and returns (drive_file_id, web_view_link).
+
+    Uses plain `requests` calls rather than the googleapiclient `build()`
+    service used elsewhere in this codebase — that service's underlying
+    httplib2 transport doesn't honor the outbound-proxy environment
+    PythonAnywhere requires for reaching non-whitelisted hosts, which
+    surfaces as "[Errno 101] Network is unreachable" here specifically
+    (confirmed in the sibling Pratisangraha backend's identical code),
+    while the plain-`requests` calls in start_resumable_upload_session
+    above work fine — `requests` does respect that proxy configuration.
+    """
+    creds = _get_credentials(drive_account)
+    headers = {'Authorization': f'Bearer {creds.token}'}
+
+    drive_file_id = None
     for _attempt in range(5):
-        result = service.files().list(
-            q=f"name = '{file_name}' and trashed = false",
-            orderBy='createdTime desc', pageSize=1, fields='files(id)',
-        ).execute()
-        files = result.get('files', [])
+        resp = requests.get(
+            'https://www.googleapis.com/drive/v3/files',
+            headers=headers,
+            params={
+                'q': f"name = '{file_name}' and trashed = false",
+                'orderBy': 'createdTime desc',
+                'pageSize': 1,
+                'fields': 'files(id)',
+            },
+        )
+        resp.raise_for_status()
+        files = resp.json().get('files', [])
         if files:
+            drive_file_id = files[0]['id']
             break
         time.sleep(1.5)
 
-    if not files:
+    if not drive_file_id:
         raise RuntimeError(f'Upload did not complete — no file named "{file_name}" found on Drive.')
 
-    drive_file_id = files[0]['id']
-    service.permissions().create(
-        fileId=drive_file_id, body={'type': 'anyone', 'role': 'reader'},
-    ).execute()
+    share_resp = requests.post(
+        f'https://www.googleapis.com/drive/v3/files/{drive_file_id}/permissions',
+        headers={**headers, 'Content-Type': 'application/json; charset=UTF-8'},
+        json={'type': 'anyone', 'role': 'reader'},
+    )
+    share_resp.raise_for_status()
 
-    refreshed = service.files().get(fileId=drive_file_id, fields='webViewLink').execute()
-    return drive_file_id, refreshed.get('webViewLink')
+    get_resp = requests.get(
+        f'https://www.googleapis.com/drive/v3/files/{drive_file_id}',
+        headers=headers,
+        params={'fields': 'webViewLink'},
+    )
+    get_resp.raise_for_status()
+    return drive_file_id, get_resp.json().get('webViewLink')
