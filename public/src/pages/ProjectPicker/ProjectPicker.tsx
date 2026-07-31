@@ -3,10 +3,38 @@ import { Link } from 'react-router-dom';
 import { PROJECTS } from '@/config/projects';
 import { EXTERNAL_APPS } from '@/config/externalApps';
 import { openExternalApp } from '@/lib/externalAppLink';
+import { useTheme, type Theme } from '@/contexts/ThemeContext';
+
+const THEMES: { id: Theme; label: string }[] = [
+  { id: 'simple', label: 'Simple' },
+  { id: 'library', label: 'Library' },
+  { id: 'dark', label: 'Dark' },
+];
 
 const ProjectPicker: React.FC = () => {
+  const { theme, setTheme } = useTheme();
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ps-bg)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ps-bg)', position: 'relative' }}>
+      <div style={{
+        position: 'absolute', top: 16, right: 16,
+        display: 'flex', alignItems: 'center', gap: 2,
+        background: 'var(--ps-surface-2)', borderRadius: 8,
+        padding: 3, border: '1px solid var(--ps-border)',
+      }}>
+        {THEMES.map(({ id, label }) => (
+          <button key={id} onClick={() => setTheme(id)}
+            style={{
+              fontSize: 11.5, fontWeight: theme === id ? 600 : 400,
+              padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer',
+              background: theme === id ? 'var(--ps-surface)' : 'transparent',
+              color: theme === id ? 'var(--ps-accent-text)' : 'var(--ps-muted)',
+              boxShadow: theme === id ? 'var(--ps-shadow-sm)' : 'none',
+              transition: 'all 0.15s',
+            }}>
+            {label}
+          </button>
+        ))}
+      </div>
       <div style={{ maxWidth: 640, padding: '40px 22px', textAlign: 'center' }}>
         <img src="/yakshavahini.svg" alt="Yakshavahini" style={{ width: '100%', maxWidth: 480, height: 'auto', margin: '0 auto 20px', display: 'block' }} />
         <p style={{ color: 'var(--ps-muted)', fontSize: 14, marginBottom: 32 }}>Choose a collection to browse</p>
