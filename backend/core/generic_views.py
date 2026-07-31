@@ -8,17 +8,17 @@ just extended to entry CRUD/search/review as well.
 """
 
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-from .permissions import IsVolunteerOrAbove, IsEditor, _role
-from .registry import get_project
-from .serializers import serialize_entry, apply_write_fields
-from .models import DriveFile, DeletionRequest
+from .permissions import IsAdmin, IsVolunteerOrAbove, IsEditor, _role
+from .registry import get_project, PROJECT_REGISTRY
+from .serializers import apply_m2m_fields, serialize_entry, apply_write_fields
+from .models import DriveFile, DeletionRequest, FilterConfig, ListDisplayConfig, LandingPageConfig
 
 PAGE_SIZE = 20
 
@@ -32,6 +32,29 @@ def _schema_or_404(project):
 
 def _approved_qs(schema):
     return schema.get_model().objects.filter(status='approved')
+
+
+def _apply_fstring(schema, qs, fstring):
+    q = Q(**{f'{schema.title_field}__icontains': fstring}) | Q(notes__icontains=fstring)
+    for field in schema.filterable_fields:
+        q |= Q(**{f'{field}__icontains': fstring})
+    for tf in schema.taxonomy_fields:
+        q |= Q(**{f'{tf.name}__name__icontains': fstring})
+    return qs.filter(q).distinct()
+
+
+def _apply_field_filters(schema, qs, params):
+    distinct = False
+    for field in schema.filterable_fields:
+        if params.get(field):
+            qs = qs.filter(**{f'{field}__icontains': params[field]})
+    for tf in schema.taxonomy_fields:
+        id_param = f'{tf.name}_id'
+        if params.get(id_param):
+            qs = qs.filter(**{f'{tf.name}__id': params[id_param]})
+            if tf.multi:
+                distinct = True
+    return qs.distinct() if distinct else qs
 
 
 class EntryDetailView(APIView):
@@ -97,6 +120,7 @@ class EntryDetailView(APIView):
             entry.review_notes = ''
 
         entry.save()
+        apply_m2m_fields(schema, entry, request.data)
         return Response(serialize_entry(schema, entry))
 
     def delete(self, request, project, pk):
@@ -194,6 +218,7 @@ class EntryCreateView(APIView):
 
         apply_write_fields(schema, entry, request.data)
         entry.save()
+        apply_m2m_fields(schema, entry, request.data)
         return Response(serialize_entry(schema, entry), status=status.HTTP_201_CREATED)
 
 
@@ -367,14 +392,9 @@ class EntryListView(APIView):
 
         fstring = params.get('fstring', '').strip()
         if fstring:
-            q = Q(**{f'{schema.title_field}__icontains': fstring}) | Q(notes__icontains=fstring)
-            for field in schema.filterable_fields:
-                q |= Q(**{f'{field}__icontains': fstring})
-            qs = qs.filter(q)
+            qs = _apply_fstring(schema, qs, fstring)
         else:
-            for field in schema.filterable_fields:
-                if params.get(field):
-                    qs = qs.filter(**{f'{field}__icontains': params[field]})
+            qs = _apply_field_filters(schema, qs, params)
             if params.get('has_link') == 'true':
                 pdf_fields = [lf for lf in schema.link_fields if not lf.is_array]
                 if pdf_fields:
@@ -447,14 +467,9 @@ class AdminEntrySearchView(APIView):
 
         fstring = params.get('fstring', '').strip()
         if fstring:
-            q = Q(**{f'{schema.title_field}__icontains': fstring}) | Q(notes__icontains=fstring)
-            for field in schema.filterable_fields:
-                q |= Q(**{f'{field}__icontains': fstring})
-            qs = qs.filter(q)
+            qs = _apply_fstring(schema, qs, fstring)
         else:
-            for field in schema.filterable_fields:
-                if params.get(field):
-                    qs = qs.filter(**{f'{field}__icontains': params[field]})
+            qs = _apply_field_filters(schema, qs, params)
 
         sort_key = params.get('sort')
         order_field = schema.sortable_fields.get(sort_key, '-id')
@@ -482,3 +497,523 @@ class AdminEntrySearchView(APIView):
             'dataset': [serialize_entry(schema, e) for e in qs],
             'allLoaded': True,
         })
+
+
+class EntryGroupsView(APIView):
+    """GET /api/v1/<project>/resources/groups?field=<groupable field name>
+    Distinct-value + count facet browsing over any of the project's
+    schema.groupable_fields — e.g. Mattukosha's "type" (ಛಂದಸ್ಸಿನ ವಿಧ) or
+    "ragas" (comma-separated, so each raga is counted individually rather
+    than the whole string being one group)."""
+
+    def get(self, request, project):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+
+        field_name = request.query_params.get('field')
+        gf = next((g for g in schema.groupable_fields if g.name == field_name), None)
+        if gf is None:
+            valid = [g.name for g in schema.groupable_fields]
+            return Response({'error': f'field must be one of {valid}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        qs = _approved_qs(schema).exclude(**{f'{gf.name}__isnull': True}).exclude(**{gf.name: ''})
+        counts = {}
+        for raw_value in qs.values_list(gf.name, flat=True):
+            if gf.multivalue:
+                parts = [p.strip() for p in raw_value.split(gf.delimiter) if p.strip()]
+            else:
+                parts = [raw_value.strip()] if raw_value.strip() else []
+            for part in parts:
+                counts[part] = counts.get(part, 0) + 1
+
+        groups = sorted(({'name': name, 'count': count} for name, count in counts.items()), key=lambda g: g['name'])
+        return Response(groups)
+
+
+# ── taxonomy management (Author/Publisher/Category/Contributor, etc.) ──────
+
+def _taxonomy_field_or_404(schema, field_name):
+    tf = next((t for t in schema.taxonomy_fields if t.name == field_name), None)
+    if tf is None:
+        valid = [t.name for t in schema.taxonomy_fields]
+        return None, Response({'error': f'field must be one of {valid}'}, status=status.HTTP_400_BAD_REQUEST)
+    return tf, None
+
+
+def _resolve_taxonomy_model(tf):
+    from django.apps import apps
+    app_label, model_name = tf.model_path.split('.')
+    return apps.get_model(app_label, model_name)
+
+
+class AutocompleteView(APIView):
+    """GET /api/v1/<project>/autocomplete/?field=<taxonomy field>&q=text"""
+
+    def get(self, request, project):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+        tf, err = _taxonomy_field_or_404(schema, request.query_params.get('field', ''))
+        if err:
+            return err
+
+        q = request.query_params.get('q', '').strip()
+        if not q:
+            return Response([])
+
+        Model = _resolve_taxonomy_model(tf)
+        qs = Model.objects.filter(name__icontains=q).order_by('name')[:10]
+        return Response([{'id': obj.pk, 'name': obj.name} for obj in qs])
+
+
+class TaxonomyListCreateView(APIView):
+    """
+    GET  /api/v1/<project>/taxonomy/<field>/?q=text — editor/admin, list all
+    (optionally filtered by name), each with how many entries reference it.
+    POST /api/v1/<project>/taxonomy/<field>/ { name } — create a new one.
+    """
+    permission_classes = [IsEditor]
+
+    def get(self, request, project, field):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+        tf, err = _taxonomy_field_or_404(schema, field)
+        if err:
+            return err
+
+        Model = _resolve_taxonomy_model(tf)
+        qs = Model.objects.annotate(entry_count=Count('entries', distinct=True))
+        q = request.query_params.get('q', '').strip()
+        if q:
+            qs = qs.filter(name__icontains=q)
+        qs = qs.order_by('name')
+
+        return Response([{'id': obj.pk, 'name': obj.name, 'entry_count': obj.entry_count} for obj in qs])
+
+    def post(self, request, project, field):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+        tf, err = _taxonomy_field_or_404(schema, field)
+        if err:
+            return err
+
+        name = (request.data.get('name') or '').strip()
+        if not name:
+            return Response({'error': 'name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        Model = _resolve_taxonomy_model(tf)
+        if Model.objects.filter(name=name).exists():
+            return Response({'error': f'"{name}" already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+        obj = Model.objects.create(name=name)
+        return Response({'id': obj.pk, 'name': obj.name, 'entry_count': 0}, status=status.HTTP_201_CREATED)
+
+
+class TaxonomyDetailView(APIView):
+    """
+    PATCH  /api/v1/<project>/taxonomy/<field>/<pk>/ { name } — rename.
+    DELETE /api/v1/<project>/taxonomy/<field>/<pk>/ — only allowed when no
+    entry references it (merge duplicates first).
+    """
+    permission_classes = [IsEditor]
+
+    def patch(self, request, project, field, pk):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+        tf, err = _taxonomy_field_or_404(schema, field)
+        if err:
+            return err
+        Model = _resolve_taxonomy_model(tf)
+
+        try:
+            obj = Model.objects.get(pk=pk)
+        except Model.DoesNotExist:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        name = (request.data.get('name') or '').strip()
+        if not name:
+            return Response({'error': 'name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if Model.objects.exclude(pk=pk).filter(name=name).exists():
+            return Response({'error': f'"{name}" already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+        obj.name = name
+        obj.save(update_fields=['name'])
+        entry_count = Model.objects.filter(pk=pk).annotate(
+            entry_count=Count('entries', distinct=True)
+        ).values_list('entry_count', flat=True).first()
+        return Response({'id': obj.pk, 'name': obj.name, 'entry_count': entry_count or 0})
+
+    def delete(self, request, project, field, pk):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+        tf, err = _taxonomy_field_or_404(schema, field)
+        if err:
+            return err
+        Model = _resolve_taxonomy_model(tf)
+
+        try:
+            obj = Model.objects.get(pk=pk)
+        except Model.DoesNotExist:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        entry_count = Model.objects.filter(pk=pk).annotate(
+            entry_count=Count('entries', distinct=True)
+        ).values_list('entry_count', flat=True).first() or 0
+        if entry_count > 0:
+            return Response(
+                {'error': f'Still used by {entry_count} entr{"y" if entry_count == 1 else "ies"} — reassign or merge them first.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TaxonomyMergeView(APIView):
+    """
+    POST /api/v1/<project>/taxonomy/<field>/merge/ { keep_id, merge_ids: [...] }
+    — admin only. Repoints every entry referencing any of merge_ids over to
+    keep_id (bulk `update` for a single FK, add/remove for M2M), then deletes
+    the merged rows. Safe by construction: entries only ever reference these
+    taxonomy rows by FK/M2M — nothing else points at them.
+    """
+    permission_classes = [IsAdmin]
+
+    def post(self, request, project, field):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+        tf, err = _taxonomy_field_or_404(schema, field)
+        if err:
+            return err
+        Model = _resolve_taxonomy_model(tf)
+
+        keep_id = request.data.get('keep_id')
+        merge_ids = request.data.get('merge_ids') or []
+        if not keep_id or not isinstance(merge_ids, list) or not merge_ids:
+            return Response({'error': 'keep_id and a non-empty merge_ids list are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        merge_ids = [mid for mid in merge_ids if mid != keep_id]
+        if not merge_ids:
+            return Response({'error': 'merge_ids must not be empty (and cannot include keep_id)'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            keep_obj = Model.objects.get(pk=keep_id)
+        except Model.DoesNotExist:
+            return Response({'error': 'keep_id not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        merge_objs = list(Model.objects.filter(pk__in=merge_ids))
+        if len(merge_objs) != len(merge_ids):
+            return Response({'error': 'One or more merge_ids not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        EntryModel = schema.get_model()
+        if tf.multi:
+            for entry in EntryModel.objects.filter(**{f'{tf.name}__in': merge_ids}).distinct():
+                getattr(entry, tf.name).remove(*merge_objs)
+                getattr(entry, tf.name).add(keep_obj)
+        else:
+            EntryModel.objects.filter(**{f'{tf.name}_id__in': merge_ids}).update(**{f'{tf.name}_id': keep_id})
+
+        merged_count = len(merge_objs)
+        Model.objects.filter(pk__in=merge_ids).delete()
+
+        entry_count = Model.objects.filter(pk=keep_id).annotate(
+            entry_count=Count('entries', distinct=True)
+        ).values_list('entry_count', flat=True).first()
+
+        return Response({
+            'id': keep_obj.pk, 'name': keep_obj.name, 'entry_count': entry_count or 0,
+            'merged_count': merged_count,
+        })
+
+
+# ── admin-configurable public filter sidebar ────────────────────────────────
+
+class FilterConfigView(APIView):
+    """
+    GET /api/v1/<project>/filter-config/ — public (the public site reads this
+    on every Library page load to decide which facets to show). Returns every
+    field available for facet browsing (schema.groupable_fields +
+    schema.taxonomy_fields) plus which of them are currently enabled. Absence
+    of a stored FilterConfig row means "everything available is enabled" —
+    a project that's never been configured behaves exactly as before this
+    feature existed.
+
+    PUT /api/v1/<project>/filter-config/ { enabled: [field, ...] } — editor/
+    admin only. Silently drops any name not in `available`.
+    """
+
+    def get_permissions(self):
+        return [IsEditor()] if self.request.method == 'PUT' else []
+
+    def _available(self, schema):
+        available = [{'field': gf.name, 'label': gf.label, 'kind': 'scalar'} for gf in schema.groupable_fields]
+        available += [{'field': tf.name, 'label': tf.label, 'kind': 'taxonomy'} for tf in schema.taxonomy_fields]
+        return available
+
+    def get(self, request, project):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+
+        available = self._available(schema)
+        config = FilterConfig.objects.filter(project=project).first()
+        enabled = config.enabled_fields if config else [a['field'] for a in available]
+
+        return Response({'available': available, 'enabled': enabled})
+
+    def put(self, request, project):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+
+        valid_fields = {a['field'] for a in self._available(schema)}
+        requested = request.data.get('enabled')
+        if not isinstance(requested, list):
+            return Response({'error': 'enabled must be a list of field names'}, status=status.HTTP_400_BAD_REQUEST)
+
+        enabled = [f for f in requested if f in valid_fields]
+        config, _ = FilterConfig.objects.update_or_create(
+            project=project, defaults={'enabled_fields': enabled},
+        )
+        return Response({'available': self._available(schema), 'enabled': config.enabled_fields})
+
+
+# ── admin-configurable public list-view display fields ─────────────────────
+
+VALID_FONT_SIZES = {'sm', 'md', 'lg'}
+
+
+DATE_FIELD_KEY = '__date__'
+
+
+class ListDisplayConfigView(APIView):
+    """
+    GET /api/v1/<project>/list-display-config/ — public (the public site
+    reads this to decide which extra fields to show under the title on the
+    library list/grid, in what order, and at what size). Returns every field
+    available (schema.display_fields, plus a synthetic "__date__" entry if
+    the project has schema.date_display_label set) and the currently-selected
+    subset **in order** with each one's font size — `selected` is a plain
+    JSON list, so whatever order the admin UI submits is exactly the order
+    rendered.
+
+    Absence of a stored ListDisplayConfig row means "show whatever showed
+    before this feature existed": just the date, if the project has one,
+    otherwise nothing extra.
+
+    PUT /api/v1/<project>/list-display-config/ { selected: [{field, font_size}, ...] }
+    — editor/admin only. Drops any field not in `available` and any
+    font_size not in {'sm', 'md', 'lg'}; preserves the submitted order.
+    """
+
+    def get_permissions(self):
+        return [IsEditor()] if self.request.method == 'PUT' else []
+
+    def _available(self, schema):
+        available = [{'field': df.name, 'label': df.label, 'kind': df.kind} for df in schema.display_fields]
+        if schema.date_fields and schema.date_display_label:
+            available.append({'field': DATE_FIELD_KEY, 'label': schema.date_display_label, 'kind': 'date'})
+        return available
+
+    def get(self, request, project):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+
+        available = self._available(schema)
+        config = ListDisplayConfig.objects.filter(project=project).first()
+        if config:
+            selected = config.fields
+        elif schema.date_fields and schema.date_display_label:
+            selected = [{'field': DATE_FIELD_KEY, 'font_size': 'sm'}]
+        else:
+            selected = []
+
+        return Response({'available': available, 'selected': selected})
+
+    def put(self, request, project):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+
+        valid_fields = {a['field'] for a in self._available(schema)}
+        requested = request.data.get('selected')
+        if not isinstance(requested, list):
+            return Response({'error': 'selected must be a list of {field, font_size}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        selected = [
+            {'field': item.get('field'), 'font_size': item.get('font_size')}
+            for item in requested
+            if isinstance(item, dict) and item.get('field') in valid_fields and item.get('font_size') in VALID_FONT_SIZES
+        ]
+        config, _ = ListDisplayConfig.objects.update_or_create(
+            project=project, defaults={'fields': selected},
+        )
+        return Response({'available': self._available(schema), 'selected': config.fields})
+
+
+# ── admin-configurable public landing page (paragraphs + buttons) ──────────
+
+VALID_BLOCK_TYPES = {'paragraph', 'button'}
+VALID_BUTTON_TARGETS = {'home', 'library', 'external'}
+
+
+def _clean_blocks(raw):
+    """Validate+normalize a requested block list, dropping anything malformed
+    rather than erroring the whole save — same permissiveness as
+    ListDisplayConfigView.put's field filtering."""
+    cleaned = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        block_type = item.get('type')
+        if block_type == 'paragraph':
+            text = item.get('text')
+            if isinstance(text, str) and text.strip():
+                cleaned.append({'type': 'paragraph', 'text': text})
+        elif block_type == 'button':
+            label = item.get('label')
+            target_type = item.get('target_type')
+            if not (isinstance(label, str) and label.strip() and target_type in VALID_BUTTON_TARGETS):
+                continue
+            block = {'type': 'button', 'label': label, 'target_type': target_type}
+            if target_type == 'external':
+                url = item.get('url')
+                if not (isinstance(url, str) and url.strip()):
+                    continue
+                block['url'] = url
+            cleaned.append(block)
+    return cleaned
+
+
+class LandingPageConfigView(APIView):
+    """
+    GET /api/v1/<project>/landing-page/ — public. Returns the admin-authored
+    block list for this project's landing page (empty list if never
+    configured — the public site then falls back to its generic Home page).
+
+    PUT /api/v1/<project>/landing-page/ { blocks: [...] } — editor/admin
+    only. Malformed blocks are silently dropped rather than rejecting the
+    whole request, same permissiveness as the other config views above.
+    """
+
+    def get_permissions(self):
+        return [IsEditor()] if self.request.method == 'PUT' else []
+
+    def get(self, request, project):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+        config = LandingPageConfig.objects.filter(project=project).first()
+        return Response({'blocks': config.blocks if config else []})
+
+    def put(self, request, project):
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+
+        requested = request.data.get('blocks')
+        if not isinstance(requested, list):
+            return Response({'error': 'blocks must be a list'}, status=status.HTTP_400_BAD_REQUEST)
+
+        blocks = _clean_blocks(requested)
+        config, _ = LandingPageConfig.objects.update_or_create(
+            project=project, defaults={'blocks': blocks},
+        )
+        return Response({'blocks': config.blocks})
+
+
+# ── deletion request review (editor/admin approval queue) ──────────────────
+# EntryDetailView.delete() above is the create side: a volunteer's delete on
+# a live (non-draft) entry creates one of these instead of deleting directly.
+# DeletionRequest uses a generic FK, so — unlike every other view in this
+# file — this is one shared review inbox across every project rather than a
+# per-project endpoint (see core/urls.py, not core/project_urls.py).
+
+def _schema_for_content_type(ct):
+    model_cls = ct.model_class()
+    for schema in PROJECT_REGISTRY.values():
+        if schema.get_model() is model_cls:
+            return schema
+    return None
+
+
+def _serialize_deletion_request(dr):
+    schema = _schema_for_content_type(dr.content_type)
+    entry = dr.entry
+    title = getattr(entry, schema.title_field, '') or '' if (entry is not None and schema is not None) else ''
+    return {
+        'id': dr.pk,
+        'project': schema.slug if schema else None,
+        'project_label': schema.label if schema else '',
+        'entry_pk': dr.object_id,
+        'entry_display_id': entry.entry_id if entry is not None else '',
+        'title': title,
+        'requested_by': dr.requested_by.email if dr.requested_by else '',
+        'reason': dr.reason or '',
+        'status': dr.status,
+        'reviewed_by': dr.reviewed_by.email if dr.reviewed_by else '',
+        'reviewed_at': dr.reviewed_at.isoformat() if dr.reviewed_at else None,
+        'created_at': dr.created_at.isoformat(),
+    }
+
+
+class DeletionRequestListView(APIView):
+    """GET /api/v1/deletion-requests/?status=pending|approved|rejected|all
+    (default pending) — editor/admin."""
+    permission_classes = [IsEditor]
+
+    def get(self, request):
+        status_param = request.query_params.get('status', 'pending')
+        qs = DeletionRequest.objects.select_related('content_type', 'requested_by', 'reviewed_by').order_by('-created_at')
+        if status_param != 'all':
+            qs = qs.filter(status=status_param)
+        return Response([_serialize_deletion_request(dr) for dr in qs])
+
+
+class DeletionRequestReviewView(APIView):
+    """PATCH /api/v1/deletion-requests/<pk>/review/ { status: approved|rejected }
+    — admin only. Approving archives the live entry (same `_archive_entry`
+    helper `EntryDetailView.delete()` uses) then hard-deletes it; rejecting
+    just marks the request reviewed and leaves the entry untouched."""
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, pk):
+        try:
+            dr = DeletionRequest.objects.get(pk=pk)
+        except DeletionRequest.DoesNotExist:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if dr.status != 'pending':
+            return Response({'error': 'This request has already been reviewed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        new_status = request.data.get('status')
+        if new_status not in ('approved', 'rejected'):
+            return Response({'error': 'status must be "approved" or "rejected"'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_status == 'approved':
+            schema = _schema_for_content_type(dr.content_type)
+            entry = dr.entry
+            if entry is None or schema is None:
+                return Response({'error': 'The entry no longer exists.'}, status=status.HTTP_400_BAD_REQUEST)
+            _archive_entry(schema, entry, request.user, dr.reason or '', duplicate_of=None)
+            # entry.delete() (inside _archive_entry) set the deleted instance's
+            # pk to None; dr's GenericForeignKey still has that now-"unsaved"
+            # object cached, which makes Django's save() safety check refuse
+            # to save dr below ("unsaved related object"). refresh_from_db()
+            # clears that stale cache without losing our pending field edits
+            # below (they're set after this, not before).
+            dr.refresh_from_db()
+
+        dr.status = new_status
+        dr.reviewed_by = request.user
+        dr.reviewed_at = timezone.now()
+        dr.save()
+        return Response(_serialize_deletion_request(dr))

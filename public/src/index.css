@@ -102,12 +102,46 @@
 }
 
 @layer base {
+  html {
+    /* Prevents any single wide element from forcing a horizontal scrollbar
+       on narrow screens; pinch-zoom is untouched (that's controlled by the
+       viewport meta tag in index.html, which never sets maximum-scale/
+       user-scalable so zooming already works). */
+    overflow-x: hidden;
+    width: 100%;
+  }
   body {
     background: var(--ps-bg);
     color: var(--ps-text);
     font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 100%;
   }
+  img, svg { max-width: 100%; }
+}
+
+/* ── Page-load entrance animation ────────────────────────────────────────
+   Applied via the `ps-animate-in` class + an optional `--ps-delay` custom
+   property for staggering (see GenericLanding/LandingBlocks). Respects
+   prefers-reduced-motion. */
+@keyframes ps-fade-in-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ps-animate-in {
+  animation: ps-fade-in-up 0.55s ease both;
+  animation-delay: var(--ps-delay, 0s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-animate-in { animation: none; }
+}
+
+.ps-project-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ps-shadow-md);
 }
 
 /* ── Font utilities ──────────────────────────────────────── */

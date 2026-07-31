@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { useEntryForm } from '@/hooks/useEntryForm';
+import DeleteEntryButton from '@/components/DeleteEntryButton/DeleteEntryButton';
 
 const EntryForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,18 +24,33 @@ const EntryForm: React.FC = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
-          <label style={labelStyle}>Name of the Mattu *</label>
-          <input style={inputStyle} value={s.nameOfTheMattu} onChange={(e) => s.setNameOfTheMattu(e.target.value)} />
+          <label style={labelStyle}>ಮಟ್ಟಿನ ಹೆಸರು (Name) *</label>
+          <input style={inputStyle} value={s.name} onChange={(e) => s.setName(e.target.value)} />
         </div>
 
         <div>
-          <label style={labelStyle}>Drive Document</label>
-          {s.linkToPdfDocument ? (
+          <label style={labelStyle}>ಛಂದಸ್ಸಿನ ವಿಧ (Type)</label>
+          <input style={inputStyle} value={s.type} onChange={(e) => s.setType(e.target.value)} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>ಸಂದರ್ಭ ಸೂಕ್ತತೆ (Situations)</label>
+          <textarea style={{ ...inputStyle, minHeight: 60 }} value={s.situations} onChange={(e) => s.setSituations(e.target.value)} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>ಹೊಂದುವ ರಾಗಗಳು (Ragas, comma-separated)</label>
+          <input style={inputStyle} value={s.ragas} onChange={(e) => s.setRagas(e.target.value)} placeholder="ಮಧ್ಯಮಾವತಿ, ಕಲ್ಯಾಣಿ, ಹಂಸಳ" />
+        </div>
+
+        <div>
+          <label style={labelStyle}>ಮಟ್ಟಿನ ವಿವರದ ದಸ್ತಾವೇಜಿನ ಕೊಂಡಿ (Document)</label>
+          {s.pdfLink ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <a href={s.linkToPdfDocument} target="_blank" rel="noopener" style={{ fontSize: 13, color: 'var(--ps-accent-text)', wordBreak: 'break-all' }}>
-                {s.linkToPdfDocument}
+              <a href={s.pdfLink} target="_blank" rel="noopener" style={{ fontSize: 13, color: 'var(--ps-accent-text)', wordBreak: 'break-all' }}>
+                {s.pdfLink}
               </a>
-              <button onClick={() => s.setLinkToPdfDocument('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ps-faint)' }}>
+              <button onClick={() => s.setPdfLink('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ps-faint)' }}>
                 <X style={{ width: 14, height: 14 }} />
               </button>
             </div>
@@ -47,11 +63,11 @@ const EntryForm: React.FC = () => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    s.setLinkToPdfDocument((e.target as HTMLInputElement).value.trim());
+                    s.setPdfLink((e.target as HTMLInputElement).value.trim());
                   }
                 }}
                 onBlur={(e) => {
-                  if (e.target.value.trim()) s.setLinkToPdfDocument(e.target.value.trim());
+                  if (e.target.value.trim()) s.setPdfLink(e.target.value.trim());
                 }}
               />
 
@@ -70,17 +86,17 @@ const EntryForm: React.FC = () => {
 
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Date (Kannada)</label>
+            <label style={labelStyle}>ದಸ್ತಾವೇಜನ್ನು ಸೇರಿಸಿದ ದಿನಾಂಕ (Kannada)</label>
             <input style={inputStyle} value={s.dateKannada} onChange={(e) => s.setDateKannada(e.target.value)} />
           </div>
           <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Date (English)</label>
+            <label style={labelStyle}>Date Added (English)</label>
             <input style={inputStyle} type="date" value={s.dateEnglish} onChange={(e) => s.setDateEnglish(e.target.value)} />
           </div>
         </div>
 
         <div>
-          <label style={labelStyle}>Notes</label>
+          <label style={labelStyle}>ಟಿಪ್ಪಣಿ (Notes)</label>
           <textarea style={{ ...inputStyle, minHeight: 70 }} value={s.notes} onChange={(e) => s.setNotes(e.target.value)} />
         </div>
 
@@ -113,6 +129,9 @@ const EntryForm: React.FC = () => {
             style={{ padding: '10px 18px', borderRadius: 8, border: 'none', background: 'var(--ps-grad)', color: '#fff', cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>
             {s.isEdit ? 'Save' : 'Submit'}
           </button>
+          {s.isEdit && id && (
+            <DeleteEntryButton entryId={parseInt(id)} status={s.status} hasPendingDeletion={s.hasPendingDeletion} />
+          )}
         </div>
       </div>
     </div>

@@ -3,18 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { fetchStats } from '@/services/api';
 import type { StatsData } from '@/services/api';
 import EntryCard from '@/components/EntryCard/EntryCard';
+import OtherProjectsFooter from '@/components/OtherProjectsFooter/OtherProjectsFooter';
 import { useProject } from '@/contexts/ProjectContext';
+import { useListDisplayFields } from '@/hooks/useListDisplayFields';
 
 const Home: React.FC = () => {
   const project = useProject();
   const navigate = useNavigate();
   const [stats, setStats] = useState<StatsData | null>(null);
+  const listFields = useListDisplayFields(project);
 
   useEffect(() => {
     fetchStats(project).then((r) => setStats(r.data)).catch(console.error);
   }, [project]);
 
   return (
+    <>
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 22px 60px' }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
         <h1 className="kn-serif" style={{ fontWeight: 700, fontSize: 'clamp(28px, 5vw, 44px)', color: 'var(--ps-text)', margin: '0 0 12px' }}>
@@ -37,11 +41,13 @@ const Home: React.FC = () => {
             Recently Added
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-            {stats.recently_added.map((e) => <EntryCard key={e.id} entry={e} />)}
+            {stats.recently_added.map((e) => <EntryCard key={e.id} entry={e} listFields={listFields} />)}
           </div>
         </section>
       )}
     </div>
+    <OtherProjectsFooter />
+    </>
   );
 };
 

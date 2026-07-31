@@ -4,11 +4,17 @@ every project, reading field names from its ProjectSchema instead of having
 one hardcoded serializer per project.
 """
 
+from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.db import models as django_models
 from django.utils.dateparse import parse_date
 
 from .models import DeletionRequest
+
+
+def _resolve_model(model_path):
+    app_label, model_name = model_path.split('.')
+    return apps.get_model(app_label, model_name)
 
 
 def _serialize_value(obj, field_name):
@@ -40,19 +46,32 @@ def serialize_entry(schema, obj):
         'view_count': obj.view_count,
         'has_pending_deletion': has_pending_deletion(obj),
     }
-    for taxonomy_field, _ in schema.taxonomy_models:
-        related = getattr(obj, taxonomy_field, None)
-        data[taxonomy_field] = related.name if related else ''
+    for tf in schema.taxonomy_fields:
+        if tf.multi:
+            data[tf.name] = [{'id': r.id, 'name': r.name} for r in getattr(obj, tf.name).all()]
+        else:
+            related = getattr(obj, tf.name, None)
+            data[tf.name] = {'id': related.id, 'name': related.name} if related else None
     for link in schema.link_fields:
         data[link.name] = _serialize_value(obj, link.name)
     for date_field in schema.date_fields:
         data[date_field] = _serialize_value(obj, date_field)
+    # Plain scalar fields (e.g. Mattukosha's type/situations/ragas) that
+    # aren't the title, a link, a date, or a taxonomy field — just filterable
+    # text on the entry itself.
+    handled = {schema.title_field, 'notes', *(lf.name for lf in schema.link_fields),
+               *schema.date_fields, *(tf.name for tf in schema.taxonomy_fields)}
+    for field_name in schema.filterable_fields:
+        if field_name not in handled:
+            data[field_name] = _serialize_value(obj, field_name)
     return data
 
 
 def apply_write_fields(schema, obj, payload):
     """Applies whichever of a project's writable fields are present in
-    `payload` (a plain dict from request.data) onto `obj`, without saving."""
+    `payload` (a plain dict from request.data) onto `obj`, without saving.
+    ManyToMany taxonomy fields are handled separately by `apply_m2m_fields`,
+    since they need `obj` to already have a pk."""
     if schema.title_field in payload:
         setattr(obj, schema.title_field, payload[schema.title_field])
     for link in schema.link_fields:
@@ -67,11 +86,35 @@ def apply_write_fields(schema, obj, payload):
             setattr(obj, date_field, raw)
     if 'notes' in payload:
         obj.notes = payload['notes']
-    for taxonomy_field, model_path in schema.taxonomy_models:
-        name_key = f'{taxonomy_field}_name'
-        if name_key in payload and payload[name_key]:
-            from django.apps import apps
-            app_label, model_name = model_path.split('.')
-            TaxonomyModel = apps.get_model(app_label, model_name)
-            taxonomy_obj, _ = TaxonomyModel.objects.get_or_create(name=payload[name_key].strip())
-            setattr(obj, taxonomy_field, taxonomy_obj)
+    handled = {schema.title_field, 'notes', *(lf.name for lf in schema.link_fields),
+               *schema.date_fields, *(tf.name for tf in schema.taxonomy_fields)}
+    for field_name in schema.filterable_fields:
+        if field_name not in handled and field_name in payload:
+            setattr(obj, field_name, payload[field_name])
+    for tf in schema.taxonomy_fields:
+        if tf.multi:
+            continue
+        name_key = f'{tf.name}_name'
+        if name_key in payload:
+            name = (payload[name_key] or '').strip()
+            if name:
+                TaxonomyModel = _resolve_model(tf.model_path)
+                taxonomy_obj, _ = TaxonomyModel.objects.get_or_create(name=name)
+                setattr(obj, tf.name, taxonomy_obj)
+            else:
+                setattr(obj, tf.name, None)
+
+
+def apply_m2m_fields(schema, obj, payload):
+    """Applies ManyToMany taxonomy fields (e.g. Pustaka Kosha's authors/
+    contributors) — must be called after `obj.save()`, since M2M relations
+    require a pk to exist first."""
+    for tf in schema.taxonomy_fields:
+        if not tf.multi:
+            continue
+        names_key = f'{tf.name}_names'
+        if names_key in payload:
+            TaxonomyModel = _resolve_model(tf.model_path)
+            names = [n.strip() for n in (payload[names_key] or []) if n.strip()]
+            objs = [TaxonomyModel.objects.get_or_create(name=n)[0] for n in names]
+            getattr(obj, tf.name).set(objs)

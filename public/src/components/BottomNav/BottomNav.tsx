@@ -7,9 +7,9 @@ const BottomNav: React.FC = () => {
   const project = useProject();
 
   const items = [
-    { label: 'Home', href: `/${project.slug}`, icon: Home, end: true },
-    { label: 'Library', href: `/${project.slug}/library`, icon: Library, end: false },
-    { label: 'Projects', href: '/', icon: LayoutGrid, end: true },
+    { label: 'Project', href: `/${project.slug}`, icon: LayoutGrid, end: true },
+    { label: 'ಪ್ರವೇಶಿಸಿ', href: `/${project.slug}/library`, icon: Library, end: false },
+    { label: 'Home', href: '/', icon: Home, end: true },
   ];
 
   return (

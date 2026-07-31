@@ -5,6 +5,7 @@ import { fetchEntry } from '@/services/api';
 import type { Entry } from '@/services/api';
 import { extractYoutubeId } from '@/lib/youtube';
 import { useProject } from '@/contexts/ProjectContext';
+import { displayFieldValue } from '@/lib/fieldDisplay';
 
 // Handles Drive-hosted PDFs (/file/d/<id>), native Google Docs/Sheets/Slides
 // (/document|spreadsheets|presentation/d/<id>), the older ?id= share format,
@@ -39,8 +40,16 @@ const EntryDetail: React.FC = () => {
     return <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--ps-muted)' }}>Not found</div>;
   }
 
-  const pdfEmbed = getDocEmbedUrl(entry.link_to_pdf_document);
-  const videoIds = (entry.youtube_video_links || []).map(extractYoutubeId).filter(Boolean) as string[];
+  const pdfLink = (entry[project.linkField || 'pdf_link'] as string) || '';
+  const pdfEmbed = getDocEmbedUrl(pdfLink);
+  const videoLinks = (entry.youtube_video_links as string[]) || [];
+  const videoIds = videoLinks.map(extractYoutubeId).filter(Boolean) as string[];
+  const title = (entry[project.titleField] as string) || '';
+  const dateKannada = project.dateKannadaField ? (entry[project.dateKannadaField] as string) : '';
+  const dateEnglish = project.dateEnglishField ? (entry[project.dateEnglishField] as string) : '';
+  const fields = project.displayFields
+    .map((f) => ({ field: f, value: displayFieldValue(entry, f) }))
+    .filter((f) => f.value);
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '22px 22px 60px' }}>
@@ -49,13 +58,24 @@ const EntryDetail: React.FC = () => {
       </button>
 
       <h1 className="kn-serif" style={{ fontWeight: 700, fontSize: 26, color: 'var(--ps-text)', margin: '0 0 14px' }}>
-        {entry.name_of_the_mattu}
+        {title}
       </h1>
 
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 22 }}>
-        {entry.date_kannada && <span className="kn-sans" style={{ fontSize: 13.5, color: 'var(--ps-muted)' }}>{entry.date_kannada}</span>}
-        {entry.date_english && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: 'var(--ps-faint)' }}>{entry.date_english}</span>}
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
+        {dateKannada && <span className="kn-sans" style={{ fontSize: 13.5, color: 'var(--ps-muted)' }}>{dateKannada}</span>}
+        {dateEnglish && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: 'var(--ps-faint)' }}>{dateEnglish}</span>}
       </div>
+
+      {fields.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 22 }}>
+          {fields.map(({ field, value }) => (
+            <div key={field.name} style={{ fontSize: 13.5 }}>
+              <span style={{ color: 'var(--ps-muted)', marginRight: 6 }}>{field.label}:</span>
+              <span className="kn-sans" style={{ color: 'var(--ps-text)' }}>{value}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {entry.notes && (
         <div style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', borderRadius: 14, padding: 16, marginBottom: 22 }}>
@@ -67,12 +87,12 @@ const EntryDetail: React.FC = () => {
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)' }}>Document</span>
-            <a href={entry.link_to_pdf_document} target="_blank" rel="noopener"
+            <a href={pdfLink} target="_blank" rel="noopener"
               style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: 'var(--ps-accent-text)' }}>
               <ExternalLink style={{ width: 13, height: 13 }} /> Open
             </a>
           </div>
-          <iframe src={pdfEmbed} title={entry.name_of_the_mattu} style={{ width: '100%', height: '70vh', border: '1px solid var(--ps-border)', borderRadius: 12 }} />
+          <iframe src={pdfEmbed} title={title} style={{ width: '100%', height: '70vh', border: '1px solid var(--ps-border)', borderRadius: 12 }} />
         </div>
       )}
 

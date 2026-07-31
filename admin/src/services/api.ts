@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { PROJECT } from '@/config/project';
+import type { ProjectConfig } from '@/config/projects';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
@@ -13,25 +13,22 @@ api.interceptors.request.use((config) => {
 
 export default api;
 
-const base = PROJECT.apiBase;
-
 // ── Entry types ──────────────────────────────────────────────────────────
-
+// Project-specific fields (Mattukosha's type/ragas/situations, Pustaka
+// Kosha's authors/category/publisher/...) aren't enumerated here — they're
+// read/written dynamically via the index signature, driven by each
+// project's field schema instead of one hardcoded shape per project.
 export interface Entry {
   id: number;
   entry_id: string;
-  name_of_the_mattu: string;
-  link_to_pdf_document: string;
-  date_kannada: string;
-  date_english: string;
   notes: string;
-  youtube_video_links: string[];
   status: string;
   review_notes: string;
   view_count: number;
   submitted_by: string;
   reviewed_at: string;
   has_pending_deletion: boolean;
+  [key: string]: unknown;
 }
 
 export interface User {
@@ -69,34 +66,35 @@ export const fetchMe = () =>
 
 // ── Entry CRUD ───────────────────────────────────────────────────────────
 
-export const fetchEntry = (id: number) => api.get<Entry>(`${base}/entries/${id}/`);
+export const fetchEntry = (project: ProjectConfig, id: number) =>
+  api.get<Entry>(`${project.apiBase}/entries/${id}/`);
 
-export const createEntry = (data: Record<string, unknown>) =>
-  api.post<Entry>(`${base}/entries/`, data);
+export const createEntry = (project: ProjectConfig, data: Record<string, unknown>) =>
+  api.post<Entry>(`${project.apiBase}/entries/`, data);
 
-export const updateEntry = (id: number, data: Record<string, unknown>) =>
-  api.patch<Entry & { proposed_edit?: boolean }>(`${base}/entries/${id}/`, data);
+export const updateEntry = (project: ProjectConfig, id: number, data: Record<string, unknown>) =>
+  api.patch<Entry & { proposed_edit?: boolean }>(`${project.apiBase}/entries/${id}/`, data);
 
-export const deleteEntry = (id: number, reason?: string) =>
-  api.delete(`${base}/entries/${id}/`, { data: { reason } });
+export const deleteEntry = (project: ProjectConfig, id: number, reason?: string) =>
+  api.delete(`${project.apiBase}/entries/${id}/`, { data: { reason } });
 
-export const initUpload = (id: number, fileName?: string, driveAccountId?: number) =>
+export const initUpload = (project: ProjectConfig, id: number, fileName?: string, driveAccountId?: number) =>
   api.post<{ upload_url: string; access_token: string; drive_account_id: number; file_name: string }>(
-    `${base}/entries/${id}/upload/init/`, { file_name: fileName, drive_account_id: driveAccountId },
+    `${project.apiBase}/entries/${id}/upload/init/`, { file_name: fileName, drive_account_id: driveAccountId },
   );
 
-export const verifyUpload = (id: number, fileName: string, driveAccountId: number, linkField: string) =>
+export const verifyUpload = (project: ProjectConfig, id: number, fileName: string, driveAccountId: number, linkField: string) =>
   api.post<{ url: string; entry_id: string }>(
-    `${base}/entries/${id}/upload/verify/`,
+    `${project.apiBase}/entries/${id}/upload/verify/`,
     { file_name: fileName, drive_account_id: driveAccountId, link_field: linkField },
   );
 
-export const fetchMySubmissions = () => api.get<Entry[]>(`${base}/my-submissions/`);
+export const fetchMySubmissions = (project: ProjectConfig) => api.get<Entry[]>(`${project.apiBase}/my-submissions/`);
 
-export const fetchPendingEntries = () => api.get<Entry[]>(`${base}/pending-entries/`);
+export const fetchPendingEntries = (project: ProjectConfig) => api.get<Entry[]>(`${project.apiBase}/pending-entries/`);
 
-export const reviewEntry = (id: number, entryStatus: string, review_notes?: string) =>
-  api.patch<Entry>(`${base}/entries/${id}/review/`, { status: entryStatus, review_notes });
+export const reviewEntry = (project: ProjectConfig, id: number, entryStatus: string, review_notes?: string) =>
+  api.patch<Entry>(`${project.apiBase}/entries/${id}/review/`, { status: entryStatus, review_notes });
 
 export interface AdminSearchParams {
   fstring?: string;
@@ -106,8 +104,109 @@ export interface AdminSearchParams {
   pageno?: number;
 }
 
-export const searchAllEntries = (params: AdminSearchParams) =>
-  api.get<{ total: number; dataset: Entry[]; allLoaded: boolean }>(`${base}/admin/entries/`, { params });
+export const searchAllEntries = (project: ProjectConfig, params: AdminSearchParams) =>
+  api.get<{ total: number; dataset: Entry[]; allLoaded: boolean }>(`${project.apiBase}/admin/entries/`, { params });
+
+// ── Taxonomy (Author/Publisher/Category/Contributor, etc.) ─────────────
+
+export interface TaxonomyItem {
+  id: number;
+  name: string;
+  entry_count: number;
+}
+
+export const fetchTaxonomy = (project: ProjectConfig, field: string, q?: string) =>
+  api.get<TaxonomyItem[]>(`${project.apiBase}/taxonomy/${field}/`, { params: { q } });
+
+export const createTaxonomyItem = (project: ProjectConfig, field: string, name: string) =>
+  api.post<TaxonomyItem>(`${project.apiBase}/taxonomy/${field}/`, { name });
+
+export const renameTaxonomyItem = (project: ProjectConfig, field: string, id: number, name: string) =>
+  api.patch<TaxonomyItem>(`${project.apiBase}/taxonomy/${field}/${id}/`, { name });
+
+export const deleteTaxonomyItem = (project: ProjectConfig, field: string, id: number) =>
+  api.delete(`${project.apiBase}/taxonomy/${field}/${id}/`);
+
+export const mergeTaxonomyItems = (project: ProjectConfig, field: string, keepId: number, mergeIds: number[]) =>
+  api.post<TaxonomyItem & { merged_count: number }>(`${project.apiBase}/taxonomy/${field}/merge/`, {
+    keep_id: keepId, merge_ids: mergeIds,
+  });
+
+export const autocomplete = (project: ProjectConfig, field: string, q: string) =>
+  api.get<{ id: number; name: string }[]>(`${project.apiBase}/autocomplete/`, { params: { field, q } });
+
+// ── Public filter sidebar config ─────────────────────────────────────────
+
+export interface FilterFieldOption {
+  field: string;
+  label: string;
+  kind: 'scalar' | 'taxonomy';
+}
+
+export interface FilterConfig {
+  available: FilterFieldOption[];
+  enabled: string[];
+}
+
+export const fetchFilterConfig = (project: ProjectConfig) =>
+  api.get<FilterConfig>(`${project.apiBase}/filter-config/`);
+
+export const updateFilterConfig = (project: ProjectConfig, enabled: string[]) =>
+  api.put<FilterConfig>(`${project.apiBase}/filter-config/`, { enabled });
+
+// ── Public list-view display fields config ──────────────────────────────
+
+export interface ListDisplayFieldOption {
+  field: string;
+  label: string;
+  kind: 'text' | 'taxonomy-single' | 'taxonomy-multi' | 'date';
+}
+
+export type FontSize = 'sm' | 'md' | 'lg';
+
+export interface ListDisplaySelection {
+  field: string;
+  font_size: FontSize;
+}
+
+export interface ListDisplayConfig {
+  available: ListDisplayFieldOption[];
+  selected: ListDisplaySelection[];
+}
+
+export const fetchListDisplayConfig = (project: ProjectConfig) =>
+  api.get<ListDisplayConfig>(`${project.apiBase}/list-display-config/`);
+
+export const updateListDisplayConfig = (project: ProjectConfig, selected: ListDisplaySelection[]) =>
+  api.put<ListDisplayConfig>(`${project.apiBase}/list-display-config/`, { selected });
+
+// ── Public landing page content (paragraphs + buttons) ──────────────────
+
+export type LandingButtonTarget = 'home' | 'library' | 'external';
+
+export interface LandingParagraphBlock {
+  type: 'paragraph';
+  text: string;
+}
+
+export interface LandingButtonBlock {
+  type: 'button';
+  label: string;
+  target_type: LandingButtonTarget;
+  url?: string;
+}
+
+export type LandingBlock = LandingParagraphBlock | LandingButtonBlock;
+
+export interface LandingPageConfig {
+  blocks: LandingBlock[];
+}
+
+export const fetchLandingPage = (project: ProjectConfig) =>
+  api.get<LandingPageConfig>(`${project.apiBase}/landing-page/`);
+
+export const updateLandingPage = (project: ProjectConfig, blocks: LandingBlock[]) =>
+  api.put<LandingPageConfig>(`${project.apiBase}/landing-page/`, { blocks });
 
 // ── Google Drive accounts ───────────────────────────────────────────────
 
@@ -118,6 +217,29 @@ export const startDriveOAuth = () =>
 
 export const updateDriveAccount = (id: number, data: Record<string, unknown>) =>
   api.patch<DriveAccount>(`/api/v1/drive-accounts/${id}/`, data);
+
+// ── Deletion requests (editor/admin approval queue, shared across projects) ─
+
+export interface DeletionRequestItem {
+  id: number;
+  project: string | null;
+  project_label: string;
+  entry_pk: number;
+  entry_display_id: string;
+  title: string;
+  requested_by: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewed_by: string;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+export const fetchDeletionRequests = (statusFilter: string = 'pending') =>
+  api.get<DeletionRequestItem[]>('/api/v1/deletion-requests/', { params: { status: statusFilter } });
+
+export const reviewDeletionRequest = (id: number, decision: 'approved' | 'rejected') =>
+  api.patch<DeletionRequestItem>(`/api/v1/deletion-requests/${id}/review/`, { status: decision });
 
 // ── Admin (users) ───────────────────────────────────────────────────────
 

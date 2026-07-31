@@ -3,21 +3,23 @@ import { Loader2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { fetchPendingEntries, reviewEntry } from '@/services/api';
 import type { Entry } from '@/services/api';
+import { useProject } from '@/contexts/ProjectContext';
 
 const PendingQueue: React.FC = () => {
+  const { project } = useProject();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
     setLoading(true);
-    fetchPendingEntries().then((r) => setEntries(r.data)).catch(console.error).finally(() => setLoading(false));
+    fetchPendingEntries(project).then((r) => setEntries(r.data)).catch(console.error).finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(load, [project]);
 
   const handleReview = async (id: number, status: string) => {
     try {
-      await reviewEntry(id, status);
+      await reviewEntry(project, id, status);
       toast.success(`Entry ${status}`);
       load();
     } catch {
@@ -42,7 +44,7 @@ const PendingQueue: React.FC = () => {
               padding: '12px 16px', borderRadius: 10, border: '1px solid var(--ps-border)', background: 'var(--ps-surface)',
             }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ps-text)' }}>{e.name_of_the_mattu}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ps-text)' }}>{String(e[project.titleField] ?? '')}</div>
                 <div style={{ fontSize: 12, color: 'var(--ps-muted)' }}>{e.submitted_by}</div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>

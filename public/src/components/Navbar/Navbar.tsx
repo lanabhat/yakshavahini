@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, LayoutGrid } from 'lucide-react';
+import { Search, Home } from 'lucide-react';
 import { useProject } from '@/contexts/ProjectContext';
 
 const Navbar: React.FC = () => {
@@ -16,32 +16,32 @@ const Navbar: React.FC = () => {
 
   return (
     <header style={{ background: 'var(--ps-bg)', borderBottom: '1px solid var(--ps-border)' }} className="sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-5 h-14 flex items-center gap-5">
-        <Link to={`/${project.slug}`} className="flex items-center gap-2.5 shrink-0">
+      <div className="max-w-6xl mx-auto px-3 sm:px-5 h-14 flex items-center gap-2 sm:gap-5">
+        <Link to={`/${project.slug}`} className="flex items-center gap-2.5 shrink-0 min-w-0">
           <div style={{
             width: 36, height: 36, borderRadius: 10, background: 'var(--ps-grad)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <span className="kn-serif" style={{ color: '#fff', fontSize: 19, fontWeight: 700 }}>{project.nameKannada.charAt(0)}</span>
           </div>
-          <div style={{ lineHeight: 1.1 }} className="hidden sm:block">
-            <div className="ps-serif" style={{ fontWeight: 600, fontSize: 16, color: 'var(--ps-text)' }}>{project.name}</div>
-            <div className="kn-sans" style={{ fontSize: 11, color: 'var(--ps-muted)' }}>{project.nameKannada}</div>
+          <div style={{ lineHeight: 1.1, minWidth: 0 }} className="hidden sm:block">
+            <div className="ps-serif truncate" style={{ fontWeight: 600, fontSize: 16, color: 'var(--ps-text)' }}>{project.name}</div>
+            <div className="kn-sans truncate" style={{ fontSize: 11, color: 'var(--ps-muted)' }}>{project.nameKannada}</div>
           </div>
         </Link>
 
-        <div className="hidden sm:flex flex-1 max-w-xs items-center gap-2"
+        <div className="hidden sm:flex flex-1 min-w-0 max-w-xs items-center gap-2"
           style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', borderRadius: 999, padding: '8px 14px' }}>
-          <Search style={{ width: 14, height: 14, color: 'var(--ps-faint)' }} />
+          <Search style={{ width: 14, height: 14, color: 'var(--ps-faint)', flexShrink: 0 }} />
           <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={handleSearch}
             placeholder="Search..."
-            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 13.5, color: 'var(--ps-text)', width: '100%' }} />
+            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 13.5, color: 'var(--ps-text)', width: '100%', minWidth: 0 }} />
         </div>
-        <div className="flex-1" />
-        <Link to="/" title="All projects" className="hidden md:flex items-center" style={{ color: 'var(--ps-faint)' }}>
-          <LayoutGrid style={{ width: 16, height: 16 }} />
+        <div className="flex-1 min-w-0" />
+        <Link to="/" title="Home" className="hidden md:flex items-center shrink-0" style={{ color: 'var(--ps-faint)' }}>
+          <Home style={{ width: 16, height: 16 }} />
         </Link>
-        <Link to={`/${project.slug}/library`} className="kn-sans" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-muted)' }}>Library</Link>
+        <Link to={`/${project.slug}/library`} className="kn-sans shrink-0" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-muted)', whiteSpace: 'nowrap' }}>ಪ್ರವೇಶಿಸಿ</Link>
       </div>
     </header>
   );

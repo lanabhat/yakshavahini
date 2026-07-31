@@ -5,13 +5,18 @@ import {
   createEntry, updateEntry, fetchEntry, initUpload, verifyUpload,
 } from '@/services/api';
 import { uploadDirectlyToDrive } from '@/lib/directDriveUpload';
+import { useProject } from '@/contexts/ProjectContext';
 
 export function useEntryForm(id?: number) {
   const navigate = useNavigate();
+  const { project } = useProject();
   const isEdit = !!id;
 
-  const [nameOfTheMattu, setNameOfTheMattu] = useState('');
-  const [linkToPdfDocument, setLinkToPdfDocument] = useState('');
+  const [name, setName] = useState('');
+  const [type, setType] = useState('');
+  const [situations, setSituations] = useState('');
+  const [ragas, setRagas] = useState('');
+  const [pdfLink, setPdfLink] = useState('');
   const [dateKannada, setDateKannada] = useState('');
   const [dateEnglish, setDateEnglish] = useState('');
   const [notes, setNotes] = useState('');
@@ -22,21 +27,28 @@ export function useEntryForm(id?: number) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
+  const [status, setStatus] = useState('');
+  const [hasPendingDeletion, setHasPendingDeletion] = useState(false);
   const draftEntryIdRef = useRef<number | null>(id ?? null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isEdit) return;
-    fetchEntry(id!).then((res) => {
+    fetchEntry(project, id!).then((res) => {
       const e = res.data;
-      setNameOfTheMattu(e.name_of_the_mattu);
-      setLinkToPdfDocument(e.link_to_pdf_document);
-      setDateKannada(e.date_kannada);
-      setDateEnglish(e.date_english);
+      setName(e.name as string);
+      setType(e.type as string);
+      setSituations(e.situations as string);
+      setRagas(e.ragas as string);
+      setPdfLink(e.pdf_link as string);
+      setDateKannada(e.date_kannada as string);
+      setDateEnglish(e.date_english as string);
       setNotes(e.notes);
-      setYoutubeLinks(e.youtube_video_links || []);
+      setYoutubeLinks((e.youtube_video_links as string[]) || []);
+      setStatus(e.status);
+      setHasPendingDeletion(e.has_pending_deletion);
     }).catch(console.error).finally(() => setLoading(false));
-  }, [id, isEdit]);
+  }, [project, id, isEdit]);
 
   const addYoutubeLink = () => {
     const url = youtubeInput.trim();
@@ -54,14 +66,14 @@ export function useEntryForm(id?: number) {
     try {
       let entryId = draftEntryIdRef.current;
       if (!entryId) {
-        const created = await createEntry({ name_of_the_mattu: nameOfTheMattu || 'draft', action: 'draft' });
+        const created = await createEntry(project, { name: name || 'draft', action: 'draft' });
         entryId = created.data.id;
         draftEntryIdRef.current = entryId;
       }
-      const init = await initUpload(entryId, driveFileName.trim() || undefined);
+      const init = await initUpload(project, entryId, driveFileName.trim() || undefined);
       await uploadDirectlyToDrive(init.data.upload_url, init.data.access_token, file, setUploadProgress);
-      const done = await verifyUpload(entryId, init.data.file_name, init.data.drive_account_id, 'link_to_pdf_document');
-      setLinkToPdfDocument(done.data.url);
+      const done = await verifyUpload(project, entryId, init.data.file_name, init.data.drive_account_id, 'pdf_link');
+      setPdfLink(done.data.url);
       toast.success('PDF uploaded');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -73,15 +85,18 @@ export function useEntryForm(id?: number) {
   };
 
   const handleSave = async (action: 'draft' | 'submit') => {
-    if (!nameOfTheMattu.trim()) {
+    if (!name.trim()) {
       toast.error('Name is required');
       return;
     }
     setSaving(true);
     try {
       const payload = {
-        name_of_the_mattu: nameOfTheMattu,
-        link_to_pdf_document: linkToPdfDocument || null,
+        name,
+        type: type || null,
+        situations: situations || null,
+        ragas: ragas || null,
+        pdf_link: pdfLink || null,
         date_kannada: dateKannada || null,
         date_english: dateEnglish || null,
         notes: notes || null,
@@ -89,9 +104,9 @@ export function useEntryForm(id?: number) {
         action,
       };
       if (draftEntryIdRef.current) {
-        await updateEntry(draftEntryIdRef.current, payload);
+        await updateEntry(project, draftEntryIdRef.current, payload);
       } else {
-        await createEntry(payload);
+        await createEntry(project, payload);
       }
       toast.success('Saved');
       navigate('/');
@@ -104,8 +119,12 @@ export function useEntryForm(id?: number) {
 
   return {
     isEdit, loading,
-    nameOfTheMattu, setNameOfTheMattu,
-    linkToPdfDocument, setLinkToPdfDocument,
+    status, hasPendingDeletion,
+    name, setName,
+    type, setType,
+    situations, setSituations,
+    ragas, setRagas,
+    pdfLink, setPdfLink,
     dateKannada, setDateKannada,
     dateEnglish, setDateEnglish,
     notes, setNotes,

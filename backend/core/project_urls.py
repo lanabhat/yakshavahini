@@ -3,7 +3,9 @@ from django.urls import path
 from .generic_views import (
     EntryDetailView, EntryCreateView, EntryUploadInitView, EntryUploadVerifyView,
     MySubmissionsView, EntryReviewView, PendingEntryListView, EntryListView, StatsView,
-    AdminEntrySearchView,
+    AdminEntrySearchView, EntryGroupsView,
+    AutocompleteView, TaxonomyListCreateView, TaxonomyDetailView, TaxonomyMergeView,
+    FilterConfigView, ListDisplayConfigView, LandingPageConfigView,
 )
 
 # Included once per project slug under `/api/v1/<project>/...` — see the root
@@ -18,6 +20,14 @@ urlpatterns = [
     path('my-submissions/', MySubmissionsView.as_view(), name='my-submissions'),
     path('pending-entries/', PendingEntryListView.as_view(), name='pending-entries'),
     path('resources/entries', EntryListView.as_view(), name='resources-entries'),
+    path('resources/groups', EntryGroupsView.as_view(), name='resources-groups'),
     path('stats/', StatsView.as_view(), name='stats'),
     path('admin/entries/', AdminEntrySearchView.as_view(), name='admin-entries'),
+    path('autocomplete/', AutocompleteView.as_view(), name='autocomplete'),
+    path('taxonomy/<str:field>/', TaxonomyListCreateView.as_view(), name='taxonomy-list-create'),
+    path('taxonomy/<str:field>/merge/', TaxonomyMergeView.as_view(), name='taxonomy-merge'),
+    path('taxonomy/<str:field>/<int:pk>/', TaxonomyDetailView.as_view(), name='taxonomy-detail'),
+    path('filter-config/', FilterConfigView.as_view(), name='filter-config'),
+    path('list-display-config/', ListDisplayConfigView.as_view(), name='list-display-config'),
+    path('landing-page/', LandingPageConfigView.as_view(), name='landing-page'),
 ]

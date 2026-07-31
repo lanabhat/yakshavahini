@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'core',
     'mattukosha',
+    'pustakakosha',
+    'sanghatanakosha',
 ]
 
 MIDDLEWARE = [

@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProjectPicker from '@/pages/ProjectPicker/ProjectPicker';
 import ProjectLayout from '@/pages/ProjectLayout/ProjectLayout';
-import MattukoshaLanding from '@/pages/Landing/MattukoshaLanding';
+import ProjectIndex from '@/pages/ProjectLayout/ProjectIndex';
 import Home from '@/pages/Home/Home';
 import Library from '@/pages/Library/Library';
 import EntryDetail from '@/pages/EntryDetail/EntryDetail';
@@ -14,7 +14,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<ProjectPicker />} />
           <Route path="/:project" element={<ProjectLayout />}>
-            <Route index element={<MattukoshaLanding />} />
+            <Route index element={<ProjectIndex />} />
             <Route path="home" element={<Home />} />
             <Route path="library" element={<Library />} />
             <Route path="entry/:id" element={<EntryDetail />} />

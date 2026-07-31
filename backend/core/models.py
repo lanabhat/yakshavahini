@@ -244,7 +244,7 @@ class LinkCheckRun(models.Model):
 
 class LinkCheckResult(models.Model):
     """One row per unique URL checked in a run. `link_field` is whichever of
-    the project's link fields this came from (e.g. "link_to_pdf_document") —
+    the project's link fields this came from (e.g. "pdf_link") —
     not constrained to a fixed choice list, since that varies per project.
     `entries` denormalizes every entry using this exact URL as a list of
     {"id", "entry_id", "title"} dicts, so the checker never needs to re-fetch
@@ -260,3 +260,48 @@ class LinkCheckResult(models.Model):
 
     def __str__(self):
         return f'{self.link_field}:{self.url}'
+
+
+class FilterConfig(models.Model):
+    """Which of a project's available facet fields (scalar groupable_fields
+    or taxonomy_fields, both from the registry) the admin has chosen to show
+    on the public site's filter sidebar. One row per project; absence of a
+    row means "show everything available" (see FilterConfigView)."""
+    project = models.CharField(max_length=50, unique=True)
+    enabled_fields = models.JSONField(default=list)
+
+    def __str__(self):
+        return f'{self.project}: {self.enabled_fields}'
+
+
+class ListDisplayConfig(models.Model):
+    """Which of a project's schema.display_fields the admin has chosen to
+    show under the title on the public library list/grid, and at what font
+    size. One row per project; absence of a row means "show nothing extra"
+    (see ListDisplayConfigView) — i.e. today's behavior, until an admin
+    opts in."""
+    project = models.CharField(max_length=50, unique=True)
+    fields = models.JSONField(default=list)  # [{"field": "details", "font_size": "sm"}, ...]
+
+    def __str__(self):
+        return f'{self.project}: {self.fields}'
+
+
+class LandingPageConfig(models.Model):
+    """Admin-authored content for a project's public landing page (the
+    index route at /<project>/), as an ordered list of blocks. One row per
+    project; absence of a row means "no custom landing page yet" — the
+    public site falls back to the generic stats/Recently-Added Home page
+    (see pages/ProjectLayout/ProjectIndex.tsx on the public app).
+
+    Each block in `blocks` is one of:
+      {"type": "paragraph", "text": "..."}
+      {"type": "button", "label": "...", "target_type": "home"|"library"|"external", "url": "..."}
+    `url` is only meaningful (and required) when target_type is "external".
+    """
+    project = models.CharField(max_length=50, unique=True)
+    blocks = models.JSONField(default=list)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.project}: {len(self.blocks)} block(s)'
