@@ -32,7 +32,7 @@ const Login: React.FC = () => {
         background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', borderRadius: 16,
         padding: 32, width: 340, boxShadow: 'var(--ps-shadow-md)', display: 'flex', flexDirection: 'column', gap: 14,
       }}>
-        <img src="/logo.png" alt="Yakshavahini" style={{ height: 64, width: 'auto', margin: '0 auto 4px', display: 'block' }} />
+        <img src="/yakshavahini.svg" alt="Yakshavahini" style={{ width: '100%', height: 'auto', margin: '0 auto 4px', display: 'block' }} />
         <h1 className="ps-serif" style={{ fontSize: 15, fontWeight: 600, margin: '0 0 8px', color: 'var(--ps-muted)', textAlign: 'center' }}>
           Admin
         </h1>

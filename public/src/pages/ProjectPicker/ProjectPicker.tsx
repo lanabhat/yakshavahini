@@ -8,7 +8,7 @@ const ProjectPicker: React.FC = () => {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ps-bg)' }}>
       <div style={{ maxWidth: 640, padding: '40px 22px', textAlign: 'center' }}>
-        <img src="/logo.png" alt="Yakshavahini" style={{ height: 'clamp(110px, 22vw, 150px)', width: 'auto', margin: '0 auto 20px', display: 'block' }} />
+        <img src="/yakshavahini.svg" alt="Yakshavahini" style={{ width: '100%', maxWidth: 480, height: 'auto', margin: '0 auto 20px', display: 'block' }} />
         <p style={{ color: 'var(--ps-muted)', fontSize: 14, marginBottom: 32 }}>Choose a collection to browse</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
