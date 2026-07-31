@@ -32,9 +32,9 @@ const Login: React.FC = () => {
         background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', borderRadius: 16,
         padding: 32, width: 340, boxShadow: 'var(--ps-shadow-md)', display: 'flex', flexDirection: 'column', gap: 14,
       }}>
-        <img src="/logo.png" alt="Yakshavahini" style={{ width: 48, height: 48, margin: '0 auto 4px', display: 'block' }} />
-        <h1 className="ps-serif" style={{ fontSize: 20, fontWeight: 600, margin: '0 0 8px', color: 'var(--ps-text)', textAlign: 'center' }}>
-          Yakshavahini Admin
+        <img src="/logo.png" alt="Yakshavahini" style={{ height: 64, width: 'auto', margin: '0 auto 4px', display: 'block' }} />
+        <h1 className="ps-serif" style={{ fontSize: 15, fontWeight: 600, margin: '0 0 8px', color: 'var(--ps-muted)', textAlign: 'center' }}>
+          Admin
         </h1>
         <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username or email"
           style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--ps-border)', fontSize: 14 }} />
