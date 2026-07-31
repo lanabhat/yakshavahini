@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "yakshavahini-45eb3"
+  },
+  "targets": {
+    "yakshavahini-45eb3": {
+      "hosting": {
+        "public": [
+          "yakshavahini"
+        ],
+        "admin": [
+          "yakshavahini-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
