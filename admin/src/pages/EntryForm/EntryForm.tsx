@@ -3,10 +3,12 @@ import { useParams } from 'react-router-dom';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { useEntryForm } from '@/hooks/useEntryForm';
 import DeleteEntryButton from '@/components/DeleteEntryButton/DeleteEntryButton';
+import { useAuth } from '@/hooks/useAuth';
 
 const EntryForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const s = useEntryForm(id ? parseInt(id) : undefined);
+  const { role } = useAuth();
 
   const inputStyle: React.CSSProperties = {
     padding: '9px 12px', borderRadius: 8, border: '1px solid var(--ps-border)',
@@ -119,6 +121,13 @@ const EntryForm: React.FC = () => {
             </div>
           ))}
         </div>
+
+        {role === 'admin' && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ps-muted)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={s.sendForReview} onChange={(e) => s.setSendForReview(e.target.checked)} />
+            Send for review (another editor/admin must approve, instead of auto-approving)
+          </label>
+        )}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
           <button onClick={() => s.handleSave('draft')} disabled={s.saving}

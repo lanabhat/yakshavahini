@@ -22,6 +22,7 @@ export function useSanghatanaEntryForm(id?: number) {
   const [loading, setLoading] = useState(isEdit);
   const [status, setStatus] = useState('');
   const [hasPendingDeletion, setHasPendingDeletion] = useState(false);
+  const [sendForReview, setSendForReview] = useState(false);
   const draftEntryIdRef = useRef<number | null>(id ?? null);
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export function useSanghatanaEntryForm(id?: number) {
         head_quarter: headQuarter || null,
         details_pdf: detailsPdf || null,
         action,
+        ...(action === 'submit' && sendForReview ? { send_for_review: true } : {}),
       };
       if (draftEntryIdRef.current) {
         await updateEntry(project, draftEntryIdRef.current, payload);
@@ -78,6 +80,7 @@ export function useSanghatanaEntryForm(id?: number) {
   return {
     isEdit, loading,
     status, hasPendingDeletion,
+    sendForReview, setSendForReview,
     nameOfTheOrg, setNameOfTheOrg,
     details, setDetails,
     typeOfOrg, setTypeOfOrg,

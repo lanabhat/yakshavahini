@@ -40,6 +40,7 @@ export function usePustakaEntryForm(id?: number) {
   const [loading, setLoading] = useState(isEdit);
   const [status, setStatus] = useState('');
   const [hasPendingDeletion, setHasPendingDeletion] = useState(false);
+  const [sendForReview, setSendForReview] = useState(false);
   const draftEntryIdRef = useRef<number | null>(id ?? null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -119,6 +120,7 @@ export function usePustakaEntryForm(id?: number) {
         thumbnail: thumbnail || null,
         notes: notes || null,
         action,
+        ...(action === 'submit' && sendForReview ? { send_for_review: true } : {}),
       };
       if (draftEntryIdRef.current) {
         await updateEntry(project, draftEntryIdRef.current, payload);
@@ -137,6 +139,7 @@ export function usePustakaEntryForm(id?: number) {
   return {
     isEdit, loading,
     status, hasPendingDeletion,
+    sendForReview, setSendForReview,
     bookName, setBookName,
     authorNames, setAuthorNames,
     details, setDetails,

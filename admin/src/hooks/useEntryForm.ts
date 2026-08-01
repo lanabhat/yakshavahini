@@ -29,6 +29,7 @@ export function useEntryForm(id?: number) {
   const [loading, setLoading] = useState(isEdit);
   const [status, setStatus] = useState('');
   const [hasPendingDeletion, setHasPendingDeletion] = useState(false);
+  const [sendForReview, setSendForReview] = useState(false);
   const draftEntryIdRef = useRef<number | null>(id ?? null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -102,6 +103,7 @@ export function useEntryForm(id?: number) {
         notes: notes || null,
         youtube_video_links: youtubeLinks,
         action,
+        ...(action === 'submit' && sendForReview ? { send_for_review: true } : {}),
       };
       if (draftEntryIdRef.current) {
         await updateEntry(project, draftEntryIdRef.current, payload);
@@ -120,6 +122,7 @@ export function useEntryForm(id?: number) {
   return {
     isEdit, loading,
     status, hasPendingDeletion,
+    sendForReview, setSendForReview,
     name, setName,
     type, setType,
     situations, setSituations,

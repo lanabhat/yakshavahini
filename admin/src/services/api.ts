@@ -107,6 +107,9 @@ export interface AdminSearchParams {
 export const searchAllEntries = (project: ProjectConfig, params: AdminSearchParams) =>
   api.get<{ total: number; dataset: Entry[]; allLoaded: boolean }>(`${project.apiBase}/admin/entries/`, { params });
 
+export const exportEntries = (project: ProjectConfig) =>
+  api.get(`${project.apiBase}/entries/export/`, { responseType: 'blob' });
+
 // ── Taxonomy (Author/Publisher/Category/Contributor, etc.) ─────────────
 
 export interface TaxonomyItem {

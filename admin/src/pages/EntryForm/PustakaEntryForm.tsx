@@ -5,10 +5,12 @@ import { usePustakaEntryForm } from '@/hooks/usePustakaEntryForm';
 import AutocompleteInput from '@/components/AutocompleteInput/AutocompleteInput';
 import MultiAutocompleteInput from '@/components/MultiAutocompleteInput/MultiAutocompleteInput';
 import DeleteEntryButton from '@/components/DeleteEntryButton/DeleteEntryButton';
+import { useAuth } from '@/hooks/useAuth';
 
 const PustakaEntryForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const s = usePustakaEntryForm(id ? parseInt(id) : undefined);
+  const { role } = useAuth();
 
   const inputStyle: React.CSSProperties = {
     padding: '9px 12px', borderRadius: 8, border: '1px solid var(--ps-border)',
@@ -149,6 +151,13 @@ const PustakaEntryForm: React.FC = () => {
           <label style={labelStyle}>ಟಿಪ್ಪಣಿ (Notes)</label>
           <textarea style={{ ...inputStyle, minHeight: 70 }} value={s.notes} onChange={(e) => s.setNotes(e.target.value)} />
         </div>
+
+        {role === 'admin' && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ps-muted)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={s.sendForReview} onChange={(e) => s.setSendForReview(e.target.checked)} />
+            Send for review (another editor/admin must approve, instead of auto-approving)
+          </label>
+        )}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
           <button onClick={() => s.handleSave('draft')} disabled={s.saving}

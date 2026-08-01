@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
-import { searchAllEntries } from '@/services/api';
+import { toast } from 'sonner';
+import { Loader2, Plus, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { searchAllEntries, exportEntries } from '@/services/api';
 import type { Entry } from '@/services/api';
 import { useProject } from '@/contexts/ProjectContext';
 
@@ -20,6 +21,26 @@ const Library: React.FC = () => {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(0);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await exportEntries(project);
+      const url = URL.createObjectURL(res.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${project.slug}_entries.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,12 +68,22 @@ const Library: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h1 className="ps-serif" style={{ fontSize: 20, fontWeight: 600, color: 'var(--ps-text)' }}>Library ({total})</h1>
-        <Link to="/entries/new" style={{
-          display: 'flex', alignItems: 'center', gap: 6, background: 'var(--ps-grad)', color: '#fff',
-          borderRadius: 8, padding: '9px 16px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
-        }}>
-          <Plus style={{ width: 14, height: 14 }} /> New Entry
-        </Link>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={handleExport} disabled={exporting} style={{
+            display: 'flex', alignItems: 'center', gap: 6, background: 'var(--ps-surface)', color: 'var(--ps-text)',
+            border: '1px solid var(--ps-border)', borderRadius: 8, padding: '9px 16px', fontSize: 13.5, fontWeight: 600,
+            cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.6 : 1,
+          }}>
+            {exporting ? <Loader2 className="animate-spin" style={{ width: 14, height: 14 }} /> : <Download style={{ width: 14, height: 14 }} />}
+            Export to Excel
+          </button>
+          <Link to="/entries/new" style={{
+            display: 'flex', alignItems: 'center', gap: 6, background: 'var(--ps-grad)', color: '#fff',
+            borderRadius: 8, padding: '9px 16px', fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
+          }}>
+            <Plus style={{ width: 14, height: 14 }} /> New Entry
+          </Link>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
