@@ -90,9 +90,9 @@ const Library: React.FC = () => {
 
       <button
         onClick={() => setShowFilters((v) => !v)}
-        className="md:hidden"
+        className="flex md:hidden"
         style={{
-          display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, padding: '9px 14px',
+          alignItems: 'center', gap: 6, marginBottom: 14, padding: '9px 14px',
           borderRadius: 10, border: '1px solid var(--ps-border)', background: 'var(--ps-surface)',
           color: 'var(--ps-text)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', width: '100%',
         }}
