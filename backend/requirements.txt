@@ -15,6 +15,7 @@ googleapis-common-protos==1.75.0
 httplib2==0.32.0
 idna==3.18
 oauthlib==3.3.1
+openpyxl==3.1.5
 pillow==12.3.0
 proto-plus==1.28.2
 protobuf==7.35.1

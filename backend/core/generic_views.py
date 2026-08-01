@@ -104,6 +104,8 @@ class EntryDetailView(APIView):
                 entry.status = requested_status
             elif action == 'draft':
                 entry.status = 'draft'
+            elif request.data.get('send_for_review'):
+                entry.status = 'pending'
             else:
                 entry.status = 'approved'
             if 'review_notes' in request.data:
@@ -210,7 +212,7 @@ class EntryCreateView(APIView):
         )
 
         if role == 'admin':
-            entry.status = 'approved'
+            entry.status = 'pending' if request.data.get('send_for_review') else 'approved'
         elif action == 'draft' and not has_link:
             entry.status = 'draft'
         else:
@@ -369,6 +371,93 @@ class PendingEntryListView(APIView):
             return err
         qs = schema.get_model().objects.filter(status='pending').order_by('id')
         return Response([serialize_entry(schema, e) for e in qs])
+
+
+def _export_field_labels(schema):
+    """key -> column header, in export column order."""
+    labels = {
+        'entry_id': 'Entry ID',
+        schema.title_field: schema.title_field.replace('_', ' ').title(),
+    }
+    for tf in schema.taxonomy_fields:
+        labels[tf.name] = tf.label
+    for lf in schema.link_fields:
+        labels[lf.name] = lf.label
+    for date_field in schema.date_fields:
+        labels.setdefault(date_field, date_field.replace('_', ' ').title())
+    handled = {schema.title_field, *(lf.name for lf in schema.link_fields),
+               *schema.date_fields, *(tf.name for tf in schema.taxonomy_fields)}
+    for field_name in schema.filterable_fields:
+        if field_name not in handled:
+            labels[field_name] = field_name.replace('_', ' ').title()
+    labels.update({
+        'notes': 'Notes',
+        'admin_notes': 'Admin Notes',
+        'submitted_by': 'Submitted By',
+        'reviewed_by': 'Reviewed By',
+        'reviewed_at': 'Reviewed At',
+        'created_at': 'Created At',
+        'view_count': 'View Count',
+        'drive_links': 'Drive Links',
+    })
+    return labels
+
+
+def _export_cell_value(value):
+    if isinstance(value, list):
+        if value and isinstance(value[0], dict):
+            return ', '.join(v.get('name', '') for v in value)
+        return ', '.join(str(v) for v in value)
+    if isinstance(value, dict):
+        return value.get('name', '')
+    if value is None:
+        return ''
+    return value
+
+
+class EntryExportView(APIView):
+    """GET /api/v1/<project>/entries/export/ — approved entries as .xlsx
+    (editor/admin), for reconciling against the manually-managed Drive list.
+    """
+    permission_classes = [IsEditor]
+
+    def get(self, request, project):
+        import openpyxl
+        from django.http import HttpResponse
+
+        schema, err = _schema_or_404(project)
+        if err:
+            return err
+        Model = schema.get_model()
+        qs = Model.objects.filter(status='approved').order_by('entry_id')
+
+        ct = ContentType.objects.get_for_model(Model)
+        drive_links_by_entry = {}
+        for df in DriveFile.objects.filter(content_type=ct).order_by('uploaded_at'):
+            drive_links_by_entry.setdefault(df.object_id, []).append(df.drive_file_url)
+
+        labels = _export_field_labels(schema)
+        keys = list(labels.keys())
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = schema.label[:31]
+        ws.append([labels[k] for k in keys])
+
+        for obj in qs:
+            data = serialize_entry(schema, obj)
+            data['admin_notes'] = obj.admin_notes
+            data['reviewed_by'] = obj.reviewed_by.email if obj.reviewed_by else ''
+            data['created_at'] = obj.created_at.isoformat() if obj.created_at else ''
+            data['drive_links'] = '; '.join(drive_links_by_entry.get(obj.pk, []))
+            ws.append([_export_cell_value(data.get(k)) for k in keys])
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = f'attachment; filename="{schema.slug}_entries.xlsx"'
+        wb.save(response)
+        return response
 
 
 # ── public read-only browsing (search/sort/filter/paginate) ────────────────

@@ -3,7 +3,7 @@ from django.urls import path
 from .generic_views import (
     EntryDetailView, EntryCreateView, EntryUploadInitView, EntryUploadVerifyView,
     MySubmissionsView, EntryReviewView, PendingEntryListView, EntryListView, StatsView,
-    AdminEntrySearchView, EntryGroupsView,
+    AdminEntrySearchView, EntryGroupsView, EntryExportView,
     AutocompleteView, TaxonomyListCreateView, TaxonomyDetailView, TaxonomyMergeView,
     FilterConfigView, ListDisplayConfigView, LandingPageConfigView,
 )
@@ -17,6 +17,7 @@ urlpatterns = [
     path('entries/<int:pk>/upload/init/', EntryUploadInitView.as_view(), name='entry-upload-init'),
     path('entries/<int:pk>/upload/verify/', EntryUploadVerifyView.as_view(), name='entry-upload-verify'),
     path('entries/<int:pk>/review/', EntryReviewView.as_view(), name='entry-review'),
+    path('entries/export/', EntryExportView.as_view(), name='entry-export'),
     path('my-submissions/', MySubmissionsView.as_view(), name='my-submissions'),
     path('pending-entries/', PendingEntryListView.as_view(), name='pending-entries'),
     path('resources/entries', EntryListView.as_view(), name='resources-entries'),
