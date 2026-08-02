@@ -83,7 +83,7 @@ const EntryDetail: React.FC = () => {
         </div>
       )}
 
-      {pdfEmbed && (
+      {pdfLink && (
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)' }}>Document</span>
@@ -92,7 +92,9 @@ const EntryDetail: React.FC = () => {
               <ExternalLink style={{ width: 13, height: 13 }} /> Open
             </a>
           </div>
-          <iframe src={pdfEmbed} title={title} style={{ width: '100%', height: '70vh', border: '1px solid var(--ps-border)', borderRadius: 12 }} />
+          {pdfEmbed && (
+            <iframe src={pdfEmbed} title={title} style={{ width: '100%', height: '70vh', border: '1px solid var(--ps-border)', borderRadius: 12 }} />
+          )}
         </div>
       )}
 

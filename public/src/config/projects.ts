@@ -83,7 +83,9 @@ export const PROJECTS: ProjectConfig[] = [
       { name: 'summary', label: 'ಸಾರಾಂಶ', kind: 'text' },
       { name: 'more_details', label: 'ಹೆಚ್ಚಿನ ವಿವರ', kind: 'text' },
     ],
-    groupFacets: [],
+    groupFacets: [
+      { field: 'year', label: 'ಪ್ರಕಾಶನ ಕಾಲ' },
+    ],
     taxonomyFacets: [
       { field: 'category', label: 'ಪುಸ್ತಕದ ವಿಭಾಗ' },
       { field: 'publisher', label: 'ಪ್ರಕಾಶಕ' },
