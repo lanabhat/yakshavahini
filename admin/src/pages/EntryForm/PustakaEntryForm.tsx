@@ -1,22 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { X, Upload, Loader2 } from 'lucide-react';
+import { X, Upload, Loader2, Search } from 'lucide-react';
 import { usePustakaEntryForm } from '@/hooks/usePustakaEntryForm';
 import AutocompleteInput from '@/components/AutocompleteInput/AutocompleteInput';
 import MultiAutocompleteInput from '@/components/MultiAutocompleteInput/MultiAutocompleteInput';
+import TaxonomyPicker from '@/components/TaxonomyPicker/TaxonomyPicker';
 import DeleteEntryButton from '@/components/DeleteEntryButton/DeleteEntryButton';
 import { useAuth } from '@/hooks/useAuth';
+
+type PickerField = 'authors' | 'category' | 'publisher' | 'contributors' | null;
 
 const PustakaEntryForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const s = usePustakaEntryForm(id ? parseInt(id) : undefined);
   const { role } = useAuth();
+  const [openPicker, setOpenPicker] = useState<PickerField>(null);
 
   const inputStyle: React.CSSProperties = {
     padding: '9px 12px', borderRadius: 8, border: '1px solid var(--ps-border)',
     fontSize: 13.5, width: '100%', outline: 'none', background: 'var(--ps-surface)', color: 'var(--ps-text)',
   };
   const labelStyle: React.CSSProperties = { fontSize: 12.5, fontWeight: 600, color: 'var(--ps-muted)', display: 'block', marginBottom: 6 };
+  const browseBtnStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, background: 'none', border: 'none',
+    cursor: 'pointer', fontSize: 12, color: 'var(--ps-accent-text)', fontWeight: 600, padding: 0,
+  };
+
+  const toggleMulti = (values: string[], onChange: (v: string[]) => void) => (name: string) => {
+    onChange(values.includes(name) ? values.filter((v) => v !== name) : [...values, name]);
+  };
 
   if (s.loading) return <Loader2 className="animate-spin" style={{ color: 'var(--ps-accent)' }} />;
 
@@ -32,26 +44,41 @@ const PustakaEntryForm: React.FC = () => {
           <input style={inputStyle} value={s.bookName} onChange={(e) => s.setBookName(e.target.value)} />
         </div>
 
-        <MultiAutocompleteInput
-          field="authors" label="ಲೇಖಕ/ಸಂಪಾದಕ (Author/Editor)"
-          values={s.authorNames} onChange={s.setAuthorNames}
-          placeholder="Type a name and press Enter..."
-        />
+        <div>
+          <MultiAutocompleteInput
+            field="authors" label="ಲೇಖಕ/ಸಂಪಾದಕ (Author/Editor)"
+            values={s.authorNames} onChange={s.setAuthorNames}
+            placeholder="Type a name and press Enter..."
+          />
+          <button type="button" onClick={() => setOpenPicker('authors')} style={browseBtnStyle}>
+            <Search style={{ width: 12, height: 12 }} /> Browse existing
+          </button>
+        </div>
 
         <div>
           <label style={labelStyle}>ವಿವರಗಳು (Details)</label>
           <textarea style={{ ...inputStyle, minHeight: 60 }} value={s.details} onChange={(e) => s.setDetails(e.target.value)} />
         </div>
 
-        <AutocompleteInput
-          field="category" label="ಪುಸ್ತಕದ ವಿಭಾಗ (Category)"
-          value={s.categoryName} onValueChange={s.setCategoryName}
-        />
+        <div>
+          <AutocompleteInput
+            field="category" label="ಪುಸ್ತಕದ ವಿಭಾಗ (Category)"
+            value={s.categoryName} onValueChange={s.setCategoryName}
+          />
+          <button type="button" onClick={() => setOpenPicker('category')} style={browseBtnStyle}>
+            <Search style={{ width: 12, height: 12 }} /> Browse existing
+          </button>
+        </div>
 
-        <AutocompleteInput
-          field="publisher" label="ಪ್ರಕಾಶಕ (Publisher)"
-          value={s.publisherName} onValueChange={s.setPublisherName}
-        />
+        <div>
+          <AutocompleteInput
+            field="publisher" label="ಪ್ರಕಾಶಕ (Publisher)"
+            value={s.publisherName} onValueChange={s.setPublisherName}
+          />
+          <button type="button" onClick={() => setOpenPicker('publisher')} style={browseBtnStyle}>
+            <Search style={{ width: 12, height: 12 }} /> Browse existing
+          </button>
+        </div>
 
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
@@ -109,7 +136,16 @@ const PustakaEntryForm: React.FC = () => {
               <label style={{ ...labelStyle, fontWeight: 400, fontSize: 12 }}>Or upload a new PDF</label>
               <input value={s.driveFileName} onChange={(e) => s.setDriveFileName(e.target.value)}
                 placeholder="Drive file name (optional)" style={{ ...inputStyle, marginBottom: 8 }} />
-              <input ref={s.fileRef} type="file" accept="application/pdf" onChange={s.handleFileChange} disabled={s.uploading} />
+              <input ref={s.fileRef} type="file" accept="application/pdf" onChange={s.handleFileChange} disabled={s.uploading} style={{ display: 'none' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button type="button" onClick={() => s.fileRef.current?.click()} disabled={s.uploading}
+                  style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--ps-border)', background: 'var(--ps-surface)', cursor: s.uploading ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--ps-text)' }}>
+                  Choose PDF
+                </button>
+                {s.selectedFileName && (
+                  <span style={{ fontSize: 12.5, color: 'var(--ps-muted)' }}>{s.selectedFileName}</span>
+                )}
+              </div>
               {s.uploading && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 12.5, color: 'var(--ps-muted)' }}>
                   <Upload style={{ width: 13, height: 13 }} /> Uploading... {s.uploadProgress}%
@@ -119,11 +155,16 @@ const PustakaEntryForm: React.FC = () => {
           )}
         </div>
 
-        <MultiAutocompleteInput
-          field="contributors" label="ಕೋಶಕ್ಕೆ ಸೇರಿಸಲು ಸಹಕರಿದವರು (Contributors)"
-          values={s.contributorNames} onChange={s.setContributorNames}
-          placeholder="Type a name and press Enter..."
-        />
+        <div>
+          <MultiAutocompleteInput
+            field="contributors" label="ಕೋಶಕ್ಕೆ ಸೇರಿಸಲು ಸಹಕರಿದವರು (Contributors)"
+            values={s.contributorNames} onChange={s.setContributorNames}
+            placeholder="Type a name and press Enter..."
+          />
+          <button type="button" onClick={() => setOpenPicker('contributors')} style={browseBtnStyle}>
+            <Search style={{ width: 12, height: 12 }} /> Browse existing
+          </button>
+        </div>
 
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
@@ -173,6 +214,35 @@ const PustakaEntryForm: React.FC = () => {
           )}
         </div>
       </div>
+
+      {openPicker === 'authors' && (
+        <TaxonomyPicker
+          field="authors" label="ಲೇಖಕ/ಸಂಪಾದಕ (Author/Editor)" mode="multi"
+          selectedNames={s.authorNames} onToggle={toggleMulti(s.authorNames, s.setAuthorNames)}
+          onClose={() => setOpenPicker(null)}
+        />
+      )}
+      {openPicker === 'category' && (
+        <TaxonomyPicker
+          field="category" label="ಪುಸ್ತಕದ ವಿಭಾಗ (Category)" mode="single"
+          selectedNames={s.categoryName ? [s.categoryName] : []} onToggle={s.setCategoryName}
+          onClose={() => setOpenPicker(null)}
+        />
+      )}
+      {openPicker === 'publisher' && (
+        <TaxonomyPicker
+          field="publisher" label="ಪ್ರಕಾಶಕ (Publisher)" mode="single"
+          selectedNames={s.publisherName ? [s.publisherName] : []} onToggle={s.setPublisherName}
+          onClose={() => setOpenPicker(null)}
+        />
+      )}
+      {openPicker === 'contributors' && (
+        <TaxonomyPicker
+          field="contributors" label="ಕೋಶಕ್ಕೆ ಸೇರಿಸಲು ಸಹಕರಿದವರು (Contributors)" mode="multi"
+          selectedNames={s.contributorNames} onToggle={toggleMulti(s.contributorNames, s.setContributorNames)}
+          onClose={() => setOpenPicker(null)}
+        />
+      )}
     </div>
   );
 };

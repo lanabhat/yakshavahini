@@ -76,7 +76,16 @@ const EntryForm: React.FC = () => {
               <label style={{ ...labelStyle, fontWeight: 400, fontSize: 12 }}>Or upload a new PDF</label>
               <input value={s.driveFileName} onChange={(e) => s.setDriveFileName(e.target.value)}
                 placeholder="Drive file name (optional)" style={{ ...inputStyle, marginBottom: 8 }} />
-              <input ref={s.fileRef} type="file" accept="application/pdf" onChange={s.handleFileChange} disabled={s.uploading} />
+              <input ref={s.fileRef} type="file" accept="application/pdf" onChange={s.handleFileChange} disabled={s.uploading} style={{ display: 'none' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button type="button" onClick={() => s.fileRef.current?.click()} disabled={s.uploading}
+                  style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--ps-border)', background: 'var(--ps-surface)', cursor: s.uploading ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--ps-text)' }}>
+                  Choose PDF
+                </button>
+                {s.selectedFileName && (
+                  <span style={{ fontSize: 12.5, color: 'var(--ps-muted)' }}>{s.selectedFileName}</span>
+                )}
+              </div>
               {s.uploading && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 12.5, color: 'var(--ps-muted)' }}>
                   <Upload style={{ width: 13, height: 13 }} /> Uploading... {s.uploadProgress}%

@@ -84,7 +84,7 @@ const MultiAutocompleteInput: React.FC<Props> = ({ field, values, onChange, labe
         value={input}
         placeholder={placeholder}
         onChange={(e) => setInput(e.target.value)}
-        onFocus={() => suggestions.length > 0 && setOpen(true)}
+        onFocus={() => input.length > 0 && suggestions.length > 0 && setOpen(true)}
         onKeyDown={handleKeyDown}
         autoComplete="off"
         style={{

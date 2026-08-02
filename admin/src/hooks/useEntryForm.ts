@@ -23,6 +23,7 @@ export function useEntryForm(id?: number) {
   const [youtubeLinks, setYoutubeLinks] = useState<string[]>([]);
   const [youtubeInput, setYoutubeInput] = useState('');
   const [driveFileName, setDriveFileName] = useState('');
+  const [selectedFileName, setSelectedFileName] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -62,6 +63,7 @@ export function useEntryForm(id?: number) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSelectedFileName(file.name);
     setUploading(true);
     setUploadProgress(0);
     try {
@@ -81,6 +83,7 @@ export function useEntryForm(id?: number) {
       toast.error(msg || 'Upload failed');
     } finally {
       setUploading(false);
+      setSelectedFileName('');
       if (fileRef.current) fileRef.current.value = '';
     }
   };
@@ -133,6 +136,7 @@ export function useEntryForm(id?: number) {
     notes, setNotes,
     youtubeLinks, youtubeInput, setYoutubeInput, addYoutubeLink, removeYoutubeLink,
     driveFileName, setDriveFileName,
+    selectedFileName,
     uploading, uploadProgress, saving,
     fileRef, handleFileChange, handleSave,
   };

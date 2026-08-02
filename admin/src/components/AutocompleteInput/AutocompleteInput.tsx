@@ -71,7 +71,7 @@ const AutocompleteInput: React.FC<Props> = ({ field, value, onValueChange, label
         placeholder={placeholder}
         style={inputStyle}
         onChange={(e) => onValueChange(e.target.value)}
-        onFocus={() => suggestions.length > 0 && setOpen(true)}
+        onFocus={() => value.length > 0 && suggestions.length > 0 && setOpen(true)}
         onKeyDown={handleKeyDown}
         autoComplete="off"
       />
