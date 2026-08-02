@@ -658,11 +658,15 @@ class AutocompleteView(APIView):
 
 class TaxonomyListCreateView(APIView):
     """
-    GET  /api/v1/<project>/taxonomy/<field>/?q=text — editor/admin, list all
+    GET  /api/v1/<project>/taxonomy/<field>/?q=text — public, list all
     (optionally filtered by name), each with how many entries reference it.
-    POST /api/v1/<project>/taxonomy/<field>/ { name } — create a new one.
+    Needs to stay public since the site's filter sidebar (GroupFilters)
+    depends on it for taxonomy-based facets.
+    POST /api/v1/<project>/taxonomy/<field>/ { name } — editor/admin, create a new one.
     """
-    permission_classes = [IsEditor]
+
+    def get_permissions(self):
+        return [] if self.request.method == 'GET' else [IsEditor()]
 
     def get(self, request, project, field):
         schema, err = _schema_or_404(project)
