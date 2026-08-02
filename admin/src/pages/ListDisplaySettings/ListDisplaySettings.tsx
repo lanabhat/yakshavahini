@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, ChevronUp, ChevronDown, X, Plus } from 'lucide-react';
+import { Loader2, ChevronUp, ChevronDown, X, Plus, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchListDisplayConfig, updateListDisplayConfig } from '@/services/api';
-import type { ListDisplayFieldOption, ListDisplaySelection, FontSize } from '@/services/api';
+import { fetchListDisplayConfig, updateListDisplayConfig, searchAllEntries } from '@/services/api';
+import type { ListDisplayFieldOption, ListDisplaySelection, FontSize, Entry } from '@/services/api';
 import { useProject } from '@/contexts/ProjectContext';
+import ListFieldsPreview from '@/components/ListFieldsPreview/ListFieldsPreview';
 
 const DEFAULT_SIZE: FontSize = 'sm';
 
@@ -13,9 +14,13 @@ const ListDisplaySettings: React.FC = () => {
   const [selected, setSelected] = useState<ListDisplaySelection[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [sampleEntry, setSampleEntry] = useState<Entry | null>(null);
+  const [sampleLoading, setSampleLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
+    setSampleEntry(null);
     fetchListDisplayConfig(project)
       .then((r) => {
         setAvailable(r.data.available);
@@ -24,6 +29,15 @@ const ListDisplaySettings: React.FC = () => {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [project]);
+
+  useEffect(() => {
+    if (!showPreview || sampleEntry) return;
+    setSampleLoading(true);
+    searchAllEntries(project, { pageno: 0 })
+      .then((r) => setSampleEntry(r.data.dataset[0] ?? null))
+      .catch(console.error)
+      .finally(() => setSampleLoading(false));
+  }, [showPreview, sampleEntry, project]);
 
   const selectedFieldNames = new Set(selected.map((s) => s.field));
   const unselected = available.filter((opt) => !selectedFieldNames.has(opt.field));
@@ -69,13 +83,44 @@ const ListDisplaySettings: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 560 }}>
-      <h1 className="ps-serif" style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, color: 'var(--ps-text)' }}>
-        List View Display Fields
-      </h1>
-      <p style={{ fontSize: 13, color: 'var(--ps-muted)', marginBottom: 20 }}>
-        Choose which extra fields appear under the title on {project.name}&rsquo;s public library
-        list, the order they appear in, and how large each one shows.
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+        <div>
+          <h1 className="ps-serif" style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, color: 'var(--ps-text)' }}>
+            List View Display Fields
+          </h1>
+          <p style={{ fontSize: 13, color: 'var(--ps-muted)', marginBottom: 20 }}>
+            Choose which extra fields appear under the title on {project.name}&rsquo;s public library
+            list, the order they appear in, and how large each one shows.
+          </p>
+        </div>
+        <button onClick={() => setShowPreview((v) => !v)} className="kn-sans"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, padding: '7px 12px', flexShrink: 0,
+            borderRadius: 8, border: '1px solid var(--ps-border)', background: 'var(--ps-surface)',
+            color: 'var(--ps-text)', cursor: 'pointer',
+          }}>
+          {showPreview ? <EyeOff style={{ width: 13, height: 13 }} /> : <Eye style={{ width: 13, height: 13 }} />}
+          {showPreview ? 'Hide preview' : 'Preview'}
+        </button>
+      </div>
+
+      {showPreview && (
+        <div style={{
+          borderRadius: 14, border: '1px solid var(--ps-border)', background: 'var(--ps-bg)',
+          padding: '20px 22px', marginBottom: 20,
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ps-faint)', textTransform: 'uppercase', marginBottom: 12 }}>
+            Preview — how this looks on the public library list
+          </div>
+          {sampleLoading ? (
+            <Loader2 className="animate-spin" style={{ color: 'var(--ps-accent)' }} />
+          ) : sampleEntry ? (
+            <ListFieldsPreview entry={sampleEntry} titleField={project.titleField} selected={selected} available={available} />
+          ) : (
+            <p style={{ color: 'var(--ps-faint)', fontSize: 13 }}>No entries yet to preview with.</p>
+          )}
+        </div>
+      )}
 
       {available.length === 0 ? (
         <p style={{ color: 'var(--ps-muted)' }}>{project.name} has no displayable fields.</p>

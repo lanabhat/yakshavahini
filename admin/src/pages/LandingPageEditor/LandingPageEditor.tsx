@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, ChevronUp, ChevronDown, X, Plus, AlignLeft, MousePointerClick } from 'lucide-react';
+import { Loader2, ChevronUp, ChevronDown, X, Plus, AlignLeft, MousePointerClick, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { fetchLandingPage, updateLandingPage } from '@/services/api';
 import type { LandingBlock, LandingButtonTarget } from '@/services/api';
 import { useProject } from '@/contexts/ProjectContext';
+import LandingBlocksPreview from '@/components/LandingBlocksPreview/LandingBlocksPreview';
 
 const inputStyle: React.CSSProperties = {
   padding: '9px 12px', borderRadius: 8, border: '1px solid var(--ps-border)',
@@ -20,6 +21,7 @@ const LandingPageEditor: React.FC = () => {
   const [blocks, setBlocks] = useState<LandingBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -62,13 +64,38 @@ const LandingPageEditor: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 640 }}>
-      <h1 className="ps-serif" style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, color: 'var(--ps-text)' }}>
-        Landing Page
-      </h1>
-      <p style={{ fontSize: 13, color: 'var(--ps-muted)', marginBottom: 20 }}>
-        Build {project.name}&rsquo;s public landing page out of paragraphs and buttons, in the order
-        they should appear. If left empty, the public site falls back to its default stats page.
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+        <div>
+          <h1 className="ps-serif" style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, color: 'var(--ps-text)' }}>
+            Landing Page
+          </h1>
+          <p style={{ fontSize: 13, color: 'var(--ps-muted)', marginBottom: 20 }}>
+            Build {project.name}&rsquo;s public landing page out of paragraphs and buttons, in the order
+            they should appear. If left empty, the public site falls back to its default stats page.
+          </p>
+        </div>
+        <button onClick={() => setShowPreview((v) => !v)} className="kn-sans"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, padding: '7px 12px', flexShrink: 0,
+            borderRadius: 8, border: '1px solid var(--ps-border)', background: 'var(--ps-surface)',
+            color: 'var(--ps-text)', cursor: 'pointer',
+          }}>
+          {showPreview ? <EyeOff style={{ width: 13, height: 13 }} /> : <Eye style={{ width: 13, height: 13 }} />}
+          {showPreview ? 'Hide preview' : 'Preview'}
+        </button>
+      </div>
+
+      {showPreview && (
+        <div style={{
+          borderRadius: 14, border: '1px solid var(--ps-border)', background: 'var(--ps-bg)',
+          padding: '20px 22px', marginBottom: 20,
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ps-faint)', textTransform: 'uppercase', marginBottom: 12 }}>
+            Preview — how this looks on the public site
+          </div>
+          <LandingBlocksPreview blocks={blocks} />
+        </div>
+      )}
 
       {blocks.length === 0 ? (
         <p style={{ color: 'var(--ps-faint)', fontSize: 13, marginBottom: 16 }}>No content yet — add a paragraph or button below.</p>
