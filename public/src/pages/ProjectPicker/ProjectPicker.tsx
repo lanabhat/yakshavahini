@@ -52,7 +52,7 @@ const ProjectPicker: React.FC = () => {
 
         {blocks.length > 0 && <SiteBlocks blocks={blocks} />}
 
-        <p style={{ color: 'var(--ps-muted)', fontSize: 14, marginBottom: 32 }}>Choose a collection to browse</p>
+        <p className="kn-sans" style={{ color: 'var(--ps-muted)', fontSize: 14, marginBottom: 32 }}>ಯೋಜನೆಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
           {PROJECTS.map((p) => (
