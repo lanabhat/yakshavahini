@@ -49,9 +49,10 @@ const ProjectPicker: React.FC = () => {
       </div>
       <div style={{ maxWidth: 640, padding: '40px 22px', textAlign: 'center' }}>
         <img src="/yakshavahini.svg" alt="Yakshavahini" style={{ width: '100%', maxWidth: 480, height: 'auto', margin: '0 auto 20px', display: 'block' }} />
-        <p style={{ color: 'var(--ps-muted)', fontSize: 14, marginBottom: 32 }}>Choose a collection to browse</p>
 
         {blocks.length > 0 && <SiteBlocks blocks={blocks} />}
+
+        <p style={{ color: 'var(--ps-muted)', fontSize: 14, marginBottom: 32 }}>Choose a collection to browse</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
           {PROJECTS.map((p) => (
