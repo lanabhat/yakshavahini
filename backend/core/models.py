@@ -305,3 +305,38 @@ class LandingPageConfig(models.Model):
 
     def __str__(self):
         return f'{self.project}: {len(self.blocks)} block(s)'
+
+
+class SiteHomeConfig(models.Model):
+    """Admin-authored content for the site-wide root landing page (the "/"
+    route on the public app, which otherwise just shows the project-picker
+    cards). Singleton — at most one row is ever read/written (see
+    SiteHomeConfigView), unlike LandingPageConfig which has one row per
+    project.
+
+    Each block in `blocks` is one of:
+      {"type": "paragraph", "text": "..."}
+      {"type": "button", "label": "...", "target_type": "external"|"project", "url": "...", "project_slug": "..."}
+    `url` is only meaningful (and required) when target_type is "external";
+    `project_slug` only when target_type is "project" (must be a key in
+    PROJECT_REGISTRY).
+    """
+    blocks = models.JSONField(default=list)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Site home: {len(self.blocks)} block(s)'
+
+
+class SiteUpdate(models.Model):
+    """A short admin-posted announcement shown in the "Updates" section of
+    the public root landing page. Site-wide, not scoped to any project."""
+    title = models.CharField(max_length=255)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title

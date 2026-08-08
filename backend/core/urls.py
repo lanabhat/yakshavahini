@@ -7,6 +7,7 @@ from .drive_views import (
     DriveOAuthStartView, DriveOAuthCallbackView,
 )
 from .generic_views import DeletionRequestListView, DeletionRequestReviewView
+from .site_views import SiteHomeConfigView, SiteUpdateListCreateView, SiteUpdateDetailView
 
 # Shared, non-project-namespaced endpoints — auth, user management, and Drive
 # account infrastructure are the same regardless of which project you're
@@ -26,4 +27,8 @@ urlpatterns = [
 
     path('api/v1/deletion-requests/', DeletionRequestListView.as_view(), name='deletion-request-list'),
     path('api/v1/deletion-requests/<int:pk>/review/', DeletionRequestReviewView.as_view(), name='deletion-request-review'),
+
+    path('api/v1/site/home-page/', SiteHomeConfigView.as_view(), name='site-home-page'),
+    path('api/v1/site/updates/', SiteUpdateListCreateView.as_view(), name='site-update-list'),
+    path('api/v1/site/updates/<int:pk>/', SiteUpdateDetailView.as_view(), name='site-update-detail'),
 ]
