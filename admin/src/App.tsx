@@ -15,6 +15,7 @@ import FilterSettings from '@/pages/FilterSettings/FilterSettings';
 import ListDisplaySettings from '@/pages/ListDisplaySettings/ListDisplaySettings';
 import DeletionApprovalQueue from '@/pages/Deletions/DeletionApprovalQueue';
 import LandingPageEditor from '@/pages/LandingPageEditor/LandingPageEditor';
+import HomePageEditor from '@/pages/HomePageEditor/HomePageEditor';
 
 const App: React.FC = () => {
   const authState = useAuthState();
@@ -35,6 +36,7 @@ const App: React.FC = () => {
               <Route path="/list-display" element={<ProtectedRoute role="editor"><ListDisplaySettings /></ProtectedRoute>} />
               <Route path="/deletions" element={<ProtectedRoute role="editor"><DeletionApprovalQueue /></ProtectedRoute>} />
               <Route path="/landing-page" element={<ProtectedRoute role="editor"><LandingPageEditor /></ProtectedRoute>} />
+              <Route path="/home-page" element={<ProtectedRoute role="editor"><HomePageEditor /></ProtectedRoute>} />
               <Route path="/drive-accounts" element={<ProtectedRoute role="admin"><DriveAccounts /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute role="admin"><Users /></ProtectedRoute>} />
             </Route>

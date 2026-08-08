@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutGrid, ListChecks, HardDrive, Users, Tags, SlidersHorizontal, Rows3, Trash2, FileText } from 'lucide-react';
+import { LayoutGrid, ListChecks, HardDrive, Users, Tags, SlidersHorizontal, Rows3, Trash2, FileText, Home } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProject } from '@/contexts/ProjectContext';
 import { PROJECTS } from '@/config/projects';
@@ -17,6 +17,7 @@ const Shell: React.FC = () => {
     { label: 'List Display', href: '/list-display', icon: Rows3, roles: ['editor', 'admin'] },
     { label: 'Deletion Requests', href: '/deletions', icon: Trash2, roles: ['editor', 'admin'] },
     { label: 'Landing Page', href: '/landing-page', icon: FileText, roles: ['editor', 'admin'] },
+    { label: 'Home Page', href: '/home-page', icon: Home, roles: ['editor', 'admin'] },
     { label: 'Drive Accounts', href: '/drive-accounts', icon: HardDrive, roles: ['admin'] },
     { label: 'Users', href: '/users', icon: Users, roles: ['admin'] },
   ];

@@ -211,6 +211,46 @@ export const fetchLandingPage = (project: ProjectConfig) =>
 export const updateLandingPage = (project: ProjectConfig, blocks: LandingBlock[]) =>
   api.put<LandingPageConfig>(`${project.apiBase}/landing-page/`, { blocks });
 
+// ── Site-wide root home page content + Updates (not project-scoped) ─────
+
+export type SiteButtonTarget = 'external' | 'project';
+
+export interface SiteButtonBlock {
+  type: 'button';
+  label: string;
+  target_type: SiteButtonTarget;
+  url?: string;
+  project_slug?: string;
+}
+
+export type SiteLandingBlock = LandingParagraphBlock | SiteButtonBlock;
+
+export interface SiteHomeConfig {
+  blocks: SiteLandingBlock[];
+}
+
+export const fetchSiteHomePage = () => api.get<SiteHomeConfig>('/api/v1/site/home-page/');
+
+export const updateSiteHomePage = (blocks: SiteLandingBlock[]) =>
+  api.put<SiteHomeConfig>('/api/v1/site/home-page/', { blocks });
+
+export interface SiteUpdateItem {
+  id: number;
+  title: string;
+  text: string;
+  created_at: string;
+}
+
+export const fetchSiteUpdates = () => api.get<SiteUpdateItem[]>('/api/v1/site/updates/');
+
+export const createSiteUpdate = (title: string, text: string) =>
+  api.post<SiteUpdateItem>('/api/v1/site/updates/', { title, text });
+
+export const updateSiteUpdate = (id: number, data: { title?: string; text?: string }) =>
+  api.patch<SiteUpdateItem>(`/api/v1/site/updates/${id}/`, data);
+
+export const deleteSiteUpdate = (id: number) => api.delete(`/api/v1/site/updates/${id}/`);
+
 // ── Google Drive accounts ───────────────────────────────────────────────
 
 export const fetchDriveAccounts = () => api.get<DriveAccount[]>('/api/v1/drive-accounts/');

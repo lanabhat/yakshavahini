@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PROJECTS } from '@/config/projects';
 import { EXTERNAL_APPS } from '@/config/externalApps';
 import { openExternalApp } from '@/lib/externalAppLink';
 import { useTheme, type Theme } from '@/contexts/ThemeContext';
+import { fetchSiteHomePage, fetchSiteUpdates } from '@/services/api';
+import type { SiteLandingBlock, SiteUpdateItem } from '@/services/api';
+import SiteBlocks from '@/components/SiteBlocks/SiteBlocks';
+import UpdatesSection from '@/components/UpdatesSection/UpdatesSection';
 
 const THEMES: { id: Theme; label: string }[] = [
   { id: 'simple', label: 'Simple' },
@@ -13,8 +17,16 @@ const THEMES: { id: Theme; label: string }[] = [
 
 const ProjectPicker: React.FC = () => {
   const { theme, setTheme } = useTheme();
+  const [blocks, setBlocks] = useState<SiteLandingBlock[]>([]);
+  const [updates, setUpdates] = useState<SiteUpdateItem[]>([]);
+
+  useEffect(() => {
+    fetchSiteHomePage().then((r) => setBlocks(r.data.blocks)).catch(console.error);
+    fetchSiteUpdates().then((r) => setUpdates(r.data)).catch(console.error);
+  }, []);
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ps-bg)', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--ps-bg)', position: 'relative', paddingTop: 'clamp(24px, 8vh, 90px)' }}>
       <div style={{
         position: 'absolute', top: 16, right: 16,
         display: 'flex', alignItems: 'center', gap: 2,
@@ -38,6 +50,8 @@ const ProjectPicker: React.FC = () => {
       <div style={{ maxWidth: 640, padding: '40px 22px', textAlign: 'center' }}>
         <img src="/yakshavahini.svg" alt="Yakshavahini" style={{ width: '100%', maxWidth: 480, height: 'auto', margin: '0 auto 20px', display: 'block' }} />
         <p style={{ color: 'var(--ps-muted)', fontSize: 14, marginBottom: 32 }}>Choose a collection to browse</p>
+
+        {blocks.length > 0 && <SiteBlocks blocks={blocks} />}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
           {PROJECTS.map((p) => (
@@ -83,6 +97,12 @@ const ProjectPicker: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {updates.length > 0 && (
+        <div style={{ width: '100%' }}>
+          <UpdatesSection updates={updates.slice(0, 5)} />
+        </div>
+      )}
     </div>
   );
 };

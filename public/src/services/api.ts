@@ -78,6 +78,35 @@ export interface LandingPageConfig {
 export const fetchLandingPage = (project: ProjectConfig) =>
   api.get<LandingPageConfig>(`${project.apiBase}/landing-page/`);
 
+// ── Site-wide root home page content + Updates (not project-scoped) ─────
+
+export type SiteButtonTarget = 'external' | 'project';
+
+export interface SiteButtonBlock {
+  type: 'button';
+  label: string;
+  target_type: SiteButtonTarget;
+  url?: string;
+  project_slug?: string;
+}
+
+export type SiteLandingBlock = LandingParagraphBlock | SiteButtonBlock;
+
+export interface SiteHomeConfig {
+  blocks: SiteLandingBlock[];
+}
+
+export const fetchSiteHomePage = () => api.get<SiteHomeConfig>('/api/v1/site/home-page/');
+
+export interface SiteUpdateItem {
+  id: number;
+  title: string;
+  text: string;
+  created_at: string;
+}
+
+export const fetchSiteUpdates = () => api.get<SiteUpdateItem[]>('/api/v1/site/updates/');
+
 export const fetchStats = (project: ProjectConfig) => api.get<StatsData>(`${project.apiBase}/stats/`);
 
 export const fetchEntry = (project: ProjectConfig, id: number) =>
