@@ -36,6 +36,9 @@ export interface ProjectConfig {
   // Taxonomy-table facet browsing (TaxonomyListCreateView) — FK/M2M fields,
   // e.g. Pustaka Kosha's category/publisher/authors.
   taxonomyFacets: FacetDef[];
+  // Text shown on the root ProjectPicker card in place of the English name,
+  // given the project's live approved-entry count (from /stats/).
+  cardDescription?: (count: number) => string;
 }
 
 export const PROJECTS: ProjectConfig[] = [
@@ -60,12 +63,13 @@ export const PROJECTS: ProjectConfig[] = [
       { field: 'situations', label: 'ಸಂದರ್ಭ ಸೂಕ್ತತೆ' },
     ],
     taxonomyFacets: [],
+    cardDescription: (n) => `${n} ಮಟ್ಟುಗಳ ವಿವರಗಳು.`,
   },
   {
     slug: 'pustakakosha',
     apiBase: '/api/v1/pustakakosha',
     name: 'Pustaka Kosha',
-    nameKannada: 'ಪುಸ್ತಕಕೋಶ',
+    nameKannada: 'ಯಕ್ಷಪುಸ್ತಕಕೋಶ',
     active: true,
     titleField: 'book_name',
     cardSubtitleField: 'category',
@@ -91,12 +95,13 @@ export const PROJECTS: ProjectConfig[] = [
       { field: 'publisher', label: 'ಪ್ರಕಾಶಕ' },
       { field: 'authors', label: 'ಲೇಖಕ/ಸಂಪಾದಕ' },
     ],
+    cardDescription: (n) => `${n} ಯಕ್ಷಗಾನ ಪುಸ್ತಕಗಳ ವಿದ್ಯುನ್ಮಾನ ಪ್ರತಿಗಳು`,
   },
   {
     slug: 'sanghatanakosha',
     apiBase: '/api/v1/sanghatanakosha',
     name: 'Sanghatana Kosha',
-    nameKannada: 'ಸಂಘಟನಾಕೋಶ',
+    nameKannada: 'ಯಕ್ಷಸಂಘಟನಾ ಕೋಶ',
     active: true,
     titleField: 'name_of_the_org',
     linkField: 'details_pdf',
@@ -115,6 +120,7 @@ export const PROJECTS: ProjectConfig[] = [
       { field: 'yakshagana_sub_category', label: 'ಯಕ್ಷಗಾನ ಉಪ ಪ್ರಬೇಧ' },
     ],
     taxonomyFacets: [],
+    cardDescription: (n) => `${n} ಸಂಘಟನೆಗಳ ವಿವರ`,
   },
 ];
 

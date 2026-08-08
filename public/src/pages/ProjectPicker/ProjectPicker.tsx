@@ -4,7 +4,7 @@ import { PROJECTS } from '@/config/projects';
 import { EXTERNAL_APPS } from '@/config/externalApps';
 import { openExternalApp } from '@/lib/externalAppLink';
 import { useTheme, type Theme } from '@/contexts/ThemeContext';
-import { fetchSiteHomePage, fetchSiteUpdates } from '@/services/api';
+import { fetchSiteHomePage, fetchSiteUpdates, fetchStats, fetchExternalStats } from '@/services/api';
 import type { SiteLandingBlock, SiteUpdateItem } from '@/services/api';
 import SiteBlocks from '@/components/SiteBlocks/SiteBlocks';
 import UpdatesSection from '@/components/UpdatesSection/UpdatesSection';
@@ -19,10 +19,30 @@ const ProjectPicker: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const [blocks, setBlocks] = useState<SiteLandingBlock[]>([]);
   const [updates, setUpdates] = useState<SiteUpdateItem[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [externalCounts, setExternalCounts] = useState<{ total: string; unique_kosha_count: string } | null>(null);
 
   useEffect(() => {
     fetchSiteHomePage().then((r) => setBlocks(r.data.blocks)).catch(console.error);
     fetchSiteUpdates().then((r) => setUpdates(r.data)).catch(console.error);
+
+    Promise.all(
+      PROJECTS.filter((p) => p.active).map((p) =>
+        fetchStats(p).then((r) => [p.slug, r.data.total] as const).catch(() => null),
+      ),
+    ).then((results) => {
+      const map: Record<string, number> = {};
+      for (const r of results) if (r) map[r[0]] = r[1];
+      setCounts(map);
+    });
+
+    fetchExternalStats()
+      .then((r) => setExternalCounts({ total: String(r.data.total), unique_kosha_count: String(r.data.unique_kosha_count) }))
+      .catch(() => {
+        const fallback: Record<string, string> = {};
+        for (const app of EXTERNAL_APPS) fallback[app.statsField] = app.fallbackCount;
+        setExternalCounts(fallback as { total: string; unique_kosha_count: string });
+      });
   }, []);
 
   return (
@@ -66,7 +86,9 @@ const ProjectPicker: React.FC = () => {
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--ps-shadow-sm)'; e.currentTarget.style.transform = ''; }}
               >
                 <span className="kn-serif" style={{ fontSize: 17, fontWeight: 700, color: 'var(--ps-text)' }}>{p.nameKannada}</span>
-                <span style={{ fontSize: 12.5, color: 'var(--ps-muted)' }}>{p.name}</span>
+                <span className="kn-sans" style={{ fontSize: 12.5, color: 'var(--ps-muted)' }}>
+                  {p.cardDescription && counts[p.slug] !== undefined ? p.cardDescription(counts[p.slug]) : p.name}
+                </span>
               </Link>
             ) : (
               <div key={p.slug} style={{
@@ -93,7 +115,9 @@ const ProjectPicker: React.FC = () => {
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--ps-shadow-sm)'; e.currentTarget.style.transform = ''; }}
             >
               <span className="kn-serif" style={{ fontSize: 17, fontWeight: 700, color: 'var(--ps-text)' }}>{app.nameKannada}</span>
-              <span style={{ fontSize: 12.5, color: 'var(--ps-muted)' }}>{app.name}</span>
+              <span className="kn-sans" style={{ fontSize: 12.5, color: 'var(--ps-muted)' }}>
+                {externalCounts ? app.cardDescription(externalCounts[app.statsField]) : app.name}
+              </span>
             </a>
           ))}
         </div>

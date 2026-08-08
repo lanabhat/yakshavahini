@@ -109,6 +109,18 @@ export const fetchSiteUpdates = () => api.get<SiteUpdateItem[]>('/api/v1/site/up
 
 export const fetchStats = (project: ProjectConfig) => api.get<StatsData>(`${project.apiBase}/stats/`);
 
+// The standalone Pratisangraha app's own backend (separate Firebase
+// project/site, separate Django backend) — used only to show live entry
+// counts on the external-app cards on the root page. Plain axios (not the
+// `api` instance) since it's a different origin entirely, not ours.
+export interface ExternalStats {
+  total: number;
+  unique_kosha_count: number;
+}
+
+export const fetchExternalStats = () =>
+  axios.get<ExternalStats>('https://prasangapustaka.pythonanywhere.com/api/v1/stats');
+
 export const fetchEntry = (project: ProjectConfig, id: number) =>
   api.get<Entry>(`${project.apiBase}/entries/${id}/`);
 
