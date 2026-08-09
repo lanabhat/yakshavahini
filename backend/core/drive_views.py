@@ -68,7 +68,13 @@ class DriveAccountListView(APIView):
 
 
 class DriveAccountDetailView(APIView):
-    """PATCH /api/v1/drive-accounts/<pk>/ { is_active?, is_default?, drive_folder_id?, notes? } — admin only"""
+    """
+    PATCH  /api/v1/drive-accounts/<pk>/ { is_active?, is_default?, drive_folder_id?, notes? } — admin only
+    DELETE /api/v1/drive-accounts/<pk>/ — admin only. Safe to remove even if
+    it has past uploads: DriveFile.drive_account is SET_NULL, so historical
+    file records keep their entry_id/URL, they just lose the "which account
+    uploaded this" link.
+    """
     permission_classes = [IsAdmin]
 
     def patch(self, request, pk):
@@ -91,6 +97,14 @@ class DriveAccountDetailView(APIView):
 
         account.save()
         return Response(_serialize_drive_account(account))
+
+    def delete(self, request, pk):
+        try:
+            account = DriveAccount.objects.get(pk=pk)
+        except DriveAccount.DoesNotExist:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        account.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class DriveOAuthStartView(APIView):

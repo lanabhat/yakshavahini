@@ -261,6 +261,8 @@ export const startDriveOAuth = () =>
 export const updateDriveAccount = (id: number, data: Record<string, unknown>) =>
   api.patch<DriveAccount>(`/api/v1/drive-accounts/${id}/`, data);
 
+export const deleteDriveAccount = (id: number) => api.delete(`/api/v1/drive-accounts/${id}/`);
+
 // ── Deletion requests (editor/admin approval queue, shared across projects) ─
 
 export interface DeletionRequestItem {
