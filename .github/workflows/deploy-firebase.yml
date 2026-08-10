@@ -1,0 +1,45 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'admin/**'
+      - 'public/**'
+      - 'firebase.json'
+      - '.firebaserc'
+      - '.github/workflows/deploy-firebase.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and build admin
+        working-directory: admin
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install and build public
+        working-directory: public
+        run: |
+          npm ci
+          npm run build
+
+      - name: Write Firebase service account key
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "${{ github.workspace }}/firebase-key.json"
+
+      - name: Deploy to Firebase Hosting
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-key.json
+        run: npx firebase-tools deploy --only hosting --project yakshavahini-45eb3
+
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "${{ github.workspace }}/firebase-key.json"
