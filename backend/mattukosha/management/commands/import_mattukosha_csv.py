@@ -10,10 +10,14 @@ Usage:
 
 Prompts for confirmation before doing anything destructive:
   - Confirmed ("yes"): deletes every existing Mattukosha entry, then
-    imports every row in the CSV fresh.
+    imports every row in the CSV as-is — including rows that share a
+    ಮಟ್ಟಿನ ಹೆಸರು with another row, since name isn't a real unique key
+    (two entries can have the same title but differ in type/ragas/
+    situations/etc.).
   - Not confirmed (anything else / Enter): leaves existing entries alone
-    and only imports rows whose ಮಟ್ಟಿನ ಹೆಸರು isn't already in the database
-    (matched by exact name — the CSV's only natural key).
+    and only imports rows whose name isn't already in the database
+    (name is the CSV's only natural key, so this path is necessarily
+    name-based — it's the best available approximation of "missing").
 
 Pass --yes to skip the prompt and confirm the clear-then-import path
 non-interactively (e.g. from an already-scripted deploy step).
@@ -84,17 +88,21 @@ class Command(BaseCommand):
         created = 0
         skipped_existing = 0
         skipped_blank = 0
-        seen_in_file = set()
 
         for row in rows:
             name = (row.get(COLUMNS['name']) or '').strip()
             if not name:
                 skipped_blank += 1
                 continue
-            if name in existing_names or name in seen_in_file:
+            # Name isn't a real unique key — two entries can legitimately
+            # share a title but differ in type/ragas/situations/etc. Only
+            # the not-confirmed (missing-only) path uses name as a stand-in
+            # "already imported" check, since it has nothing else to go on;
+            # a fresh clear-then-import-everything run imports every row,
+            # duplicate names and all.
+            if not confirmed and name in existing_names:
                 skipped_existing += 1
                 continue
-            seen_in_file.add(name)
 
             def field(key):
                 return (row.get(COLUMNS[key]) or '').strip() or None
