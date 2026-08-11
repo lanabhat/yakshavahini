@@ -1,12 +1,14 @@
 """
 Bulk-import Mattukosha entries from a CSV export shaped like the Google
-Sheet ("Mattukosha 150 - Sheet1.csv"): columns ಮಟ್ಟಿನ ಹೆಸರು, ಛಂದಸ್ಸಿನ ವಿಧ,
-ಸಂದರ್ಭ ಸೂಕ್ತತೆ, ಹೊಂದುವ ರಾಗಗಳು, ಮಟ್ಟಿನ ವಿವರದ ದಸ್ತಾವೇಜಿನ ಕೊಂಡಿ,
+Sheet ("Mattukosha 150 - Sheet1.csv"): columns ಅನನ್ಯ ಸಂಖ್ಯೆ, ಮಟ್ಟಿನ ಹೆಸರು,
+ಛಂದಸ್ಸಿನ ವಿಧ, ಸಂದರ್ಭ ಸೂಕ್ತತೆ, ಹೊಂದುವ ರಾಗಗಳು, ಮಟ್ಟಿನ ವಿವರದ ದಸ್ತಾವೇಜಿನ ಕೊಂಡಿ,
 ದಸ್ತಾವೇಜನ್ನು ಸೇರಿಸಿದ ದಿನಾಂಕ, ಟಿಪ್ಪಣಿ — mapping 1:1 onto MattukoshaEntry's
-name/type/situations/ragas/pdf_link/date_kannada/notes fields. ಸಂದರ್ಭ ಸೂಕ್ತತೆ
-and ಹೊಂದುವ ರಾಗಗಳು are comma-separated lists of names in the CSV but real
-taxonomy tables (Situation/Raga) on the model — each row's cell gets split
-and get_or_create'd into those tables, same as migration 0003 did for the
+unique_number/name/type/situations/ragas/pdf_link/date_kannada/notes fields.
+(ಕ್ರಮ ಸಂಖ್ಯೆ, the sheet's plain row number, is intentionally not imported —
+it's not a stable identifier.) ಸಂದರ್ಭ ಸೂಕ್ತತೆ and ಹೊಂದುವ ರಾಗಗಳು are
+comma-separated lists of names in the CSV but real taxonomy tables
+(Situation/Raga) on the model — each row's cell gets split and
+get_or_create'd into those tables, same as migration 0003 did for the
 entries that existed before this table split (see _split_names there).
 
 Usage:
@@ -43,6 +45,11 @@ COLUMNS = {
     'notes': 'ಟಿಪ್ಪಣಿ',
 }
 
+# Optional — older exports (e.g. "Mattukosha 150 - Sheet1.csv") don't have
+# this column, so it's not required like COLUMNS above; read it when present,
+# leave unique_number blank otherwise.
+UNIQUE_NUMBER_COLUMN = 'ಅನನ್ಯ ಸಂಖ್ಯೆ'
+
 
 def split_names(raw):
     """Comma-separated free text -> a de-duplicated list of clean names.
@@ -74,7 +81,14 @@ class Command(BaseCommand):
         try:
             with open(csv_path, encoding='utf-8-sig', newline='') as f:
                 reader = csv.DictReader(f)
-                missing = [c for c in COLUMNS.values() if c not in (reader.fieldnames or [])]
+                # Sheet exports are inconsistent about trailing whitespace on
+                # header names (e.g. "ಕ್ರಮ ಸಂಖ್ಯೆ " here vs no trailing space
+                # elsewhere) — match/rename headers by their stripped form so
+                # this doesn't break from one export to the next.
+                raw_fieldnames = reader.fieldnames or []
+                rename = {raw: raw.strip() for raw in raw_fieldnames}
+                reader.fieldnames = [rename[raw] for raw in raw_fieldnames]
+                missing = [c for c in COLUMNS.values() if c not in reader.fieldnames]
                 if missing:
                     raise CommandError(f'CSV is missing expected column(s): {missing}\nFound: {reader.fieldnames}')
                 rows = list(reader)
@@ -135,6 +149,7 @@ class Command(BaseCommand):
 
             entry = MattukoshaEntry.objects.create(
                 name=name,
+                unique_number=(row.get(UNIQUE_NUMBER_COLUMN) or '').strip() or None,
                 type=field('type'),
                 pdf_link=field('pdf_link'),
                 date_kannada=field('date_kannada'),

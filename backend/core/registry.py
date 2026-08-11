@@ -101,11 +101,12 @@ PROJECT_REGISTRY = {
             'title': 'name',
             'date': 'date_english',
         },
-        filterable_fields=['name', 'type'],
+        filterable_fields=['name', 'type', 'unique_number'],
         groupable_fields=[
             GroupableField(name='type', label='ಛಂದಸ್ಸಿನ ವಿಧ'),
         ],
         display_fields=[
+            DisplayField(name='unique_number', label='ಅನನ್ಯ ಸಂಖ್ಯೆ'),
             DisplayField(name='type', label='ಛಂದಸ್ಸಿನ ವಿಧ'),
             DisplayField(name='ragas', label='ಹೊಂದುವ ರಾಗಗಳು', kind='taxonomy-multi'),
             DisplayField(name='situations', label='ಸಂದರ್ಭ ಸೂಕ್ತತೆ', kind='taxonomy-multi'),

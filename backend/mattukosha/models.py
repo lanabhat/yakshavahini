@@ -15,6 +15,7 @@ class MattukoshaEntry(CatalogEntryBase):
     ENTRY_ID_PREFIX = 'MTK'
 
     name = models.CharField(max_length=255)  # ಮಟ್ಟಿನ ಹೆಸರು
+    unique_number = models.CharField(max_length=50, blank=True, null=True)  # ಅನನ್ಯ ಸಂಖ್ಯೆ (source spreadsheet's own id, distinct from entry_id)
     type = models.CharField(max_length=255, blank=True, null=True)  # ಛಂದಸ್ಸಿನ ವಿಧ
     situations = models.ManyToManyField(Situation, blank=True, related_name='entries')  # ಸಂದರ್ಭ ಸೂಕ್ತತೆ
     ragas = models.ManyToManyField(Raga, blank=True, related_name='entries')  # ಹೊಂದುವ ರಾಗಗಳು

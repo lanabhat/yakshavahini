@@ -18,6 +18,7 @@ export function useEntryForm(id?: number) {
   const isEdit = !!id;
 
   const [name, setName] = useState('');
+  const [uniqueNumber, setUniqueNumber] = useState('');
   const [type, setType] = useState('');
   const [situationNames, setSituationNames] = useState<string[]>([]);
   const [ragaNames, setRagaNames] = useState<string[]>([]);
@@ -44,6 +45,7 @@ export function useEntryForm(id?: number) {
     fetchEntry(project, id!).then((res) => {
       const e = res.data;
       setName(e.name as string);
+      setUniqueNumber((e.unique_number as string) || '');
       setType(e.type as string);
       setSituationNames(((e.situations as TaxonomyRef[]) || []).map((s) => s.name));
       setRagaNames(((e.ragas as TaxonomyRef[]) || []).map((r) => r.name));
@@ -102,6 +104,7 @@ export function useEntryForm(id?: number) {
     try {
       const payload = {
         name,
+        unique_number: uniqueNumber || null,
         type: type || null,
         situations_names: situationNames,
         ragas_names: ragaNames,
@@ -132,6 +135,7 @@ export function useEntryForm(id?: number) {
     status, hasPendingDeletion,
     sendForReview, setSendForReview,
     name, setName,
+    uniqueNumber, setUniqueNumber,
     type, setType,
     situationNames, setSituationNames,
     ragaNames, setRagaNames,

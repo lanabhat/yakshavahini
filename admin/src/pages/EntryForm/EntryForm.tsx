@@ -44,6 +44,11 @@ const EntryForm: React.FC = () => {
         </div>
 
         <div>
+          <label style={labelStyle}>ಅನನ್ಯ ಸಂಖ್ಯೆ (Unique Number)</label>
+          <input style={inputStyle} value={s.uniqueNumber} onChange={(e) => s.setUniqueNumber(e.target.value)} />
+        </div>
+
+        <div>
           <label style={labelStyle}>ಛಂದಸ್ಸಿನ ವಿಧ (Type)</label>
           <input style={inputStyle} value={s.type} onChange={(e) => s.setType(e.target.value)} />
         </div>
