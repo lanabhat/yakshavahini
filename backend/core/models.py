@@ -320,8 +320,15 @@ class SiteHomeConfig(models.Model):
     `url` is only meaningful (and required) when target_type is "external";
     `project_slug` only when target_type is "project" (must be a key in
     PROJECT_REGISTRY).
+
+    When `maintenance_mode` is on, the public root page shows only the logo
+    and `maintenance_message` — `blocks`, the project cards, and the
+    Updates section are all hidden (see ProjectPicker.tsx on the public
+    app). Display-only: doesn't block any other route or admin action.
     """
     blocks = models.JSONField(default=list)
+    maintenance_mode = models.BooleanField(default=False)
+    maintenance_message = models.TextField(blank=True, default='')
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

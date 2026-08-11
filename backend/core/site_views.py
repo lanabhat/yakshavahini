@@ -64,7 +64,11 @@ class SiteHomeConfigView(APIView):
 
     def get(self, request):
         config = SiteHomeConfig.objects.first()
-        return Response({'blocks': config.blocks if config else []})
+        return Response({
+            'blocks': config.blocks if config else [],
+            'maintenance_mode': config.maintenance_mode if config else False,
+            'maintenance_message': config.maintenance_message if config else '',
+        })
 
     def put(self, request):
         requested = request.data.get('blocks')
@@ -72,13 +76,24 @@ class SiteHomeConfigView(APIView):
             return Response({'error': 'blocks must be a list'}, status=status.HTTP_400_BAD_REQUEST)
 
         blocks = _clean_site_blocks(requested)
+        maintenance_mode = bool(request.data.get('maintenance_mode'))
+        maintenance_message = (request.data.get('maintenance_message') or '').strip()
+
         config = SiteHomeConfig.objects.first()
         if config:
             config.blocks = blocks
+            config.maintenance_mode = maintenance_mode
+            config.maintenance_message = maintenance_message
             config.save()
         else:
-            config = SiteHomeConfig.objects.create(blocks=blocks)
-        return Response({'blocks': config.blocks})
+            config = SiteHomeConfig.objects.create(
+                blocks=blocks, maintenance_mode=maintenance_mode, maintenance_message=maintenance_message,
+            )
+        return Response({
+            'blocks': config.blocks,
+            'maintenance_mode': config.maintenance_mode,
+            'maintenance_message': config.maintenance_message,
+        })
 
 
 def _serialize_update(u):
