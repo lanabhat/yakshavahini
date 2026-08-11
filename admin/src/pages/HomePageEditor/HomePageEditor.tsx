@@ -32,6 +32,8 @@ const formatDate = (iso: string) => {
 const HomePageEditor: React.FC = () => {
   // -- home page blocks --
   const [blocks, setBlocks] = useState<SiteLandingBlock[]>([]);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -50,7 +52,11 @@ const HomePageEditor: React.FC = () => {
   useEffect(() => {
     setLoading(true);
     fetchSiteHomePage()
-      .then((r) => setBlocks(r.data.blocks))
+      .then((r) => {
+        setBlocks(r.data.blocks);
+        setMaintenanceMode(r.data.maintenance_mode);
+        setMaintenanceMessage(r.data.maintenance_message);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
 
@@ -80,8 +86,12 @@ const HomePageEditor: React.FC = () => {
   const handleSaveBlocks = async () => {
     setSaving(true);
     try {
-      const res = await updateSiteHomePage(blocks);
+      const res = await updateSiteHomePage({
+        blocks, maintenance_mode: maintenanceMode, maintenance_message: maintenanceMessage,
+      });
       setBlocks(res.data.blocks);
+      setMaintenanceMode(res.data.maintenance_mode);
+      setMaintenanceMessage(res.data.maintenance_message);
       toast.success('Saved');
     } catch {
       toast.error('Failed to save');
@@ -174,6 +184,28 @@ const HomePageEditor: React.FC = () => {
         </button>
       </div>
 
+      <div style={{
+        borderRadius: 12, border: `1px solid ${maintenanceMode ? '#FECACA' : 'var(--ps-border)'}`,
+        background: maintenanceMode ? '#FEF2F2' : 'var(--ps-surface)', padding: '14px 16px', marginBottom: 20,
+      }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={maintenanceMode} onChange={(e) => setMaintenanceMode(e.target.checked)} />
+          Maintenance mode
+        </label>
+        <p style={{ fontSize: 12, color: 'var(--ps-muted)', margin: '4px 0 0' }}>
+          When on, the public home page shows only the logo and this message below — the paragraphs/buttons
+          above and the project cards/Updates are all hidden until this is turned off.
+        </p>
+        {maintenanceMode && (
+          <textarea
+            value={maintenanceMessage}
+            onChange={(e) => setMaintenanceMessage(e.target.value)}
+            placeholder="e.g. We're doing scheduled maintenance — back shortly."
+            style={{ ...inputStyle, minHeight: 60, marginTop: 10 }}
+          />
+        )}
+      </div>
+
       {showPreview && (
         <div style={{
           borderRadius: 14, border: '1px solid var(--ps-border)', background: 'var(--ps-bg)',
@@ -182,7 +214,13 @@ const HomePageEditor: React.FC = () => {
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ps-faint)', textTransform: 'uppercase', marginBottom: 12 }}>
             Preview — how this looks on the public home page
           </div>
-          <SiteBlocksPreview blocks={blocks} />
+          {maintenanceMode ? (
+            <p style={{ fontSize: 14, color: 'var(--ps-muted)' }}>
+              {maintenanceMessage || <span style={{ color: 'var(--ps-faint)' }}>(no message set)</span>}
+            </p>
+          ) : (
+            <SiteBlocksPreview blocks={blocks} />
+          )}
         </div>
       )}
 

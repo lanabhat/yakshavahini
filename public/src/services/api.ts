@@ -94,6 +94,8 @@ export type SiteLandingBlock = LandingParagraphBlock | SiteButtonBlock;
 
 export interface SiteHomeConfig {
   blocks: SiteLandingBlock[];
+  maintenance_mode: boolean;
+  maintenance_message: string;
 }
 
 export const fetchSiteHomePage = () => api.get<SiteHomeConfig>('/api/v1/site/home-page/');
