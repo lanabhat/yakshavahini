@@ -7,4 +7,4 @@ from .models import MattukoshaEntry
 class MattukoshaEntryAdmin(admin.ModelAdmin):
     list_display = ('entry_id', 'name', 'type', 'status', 'date_english', 'created_at')
     list_filter = ('status', 'type')
-    search_fields = ('entry_id', 'name', 'ragas', 'situations')
+    search_fields = ('entry_id', 'name', 'ragas__name', 'situations__name')

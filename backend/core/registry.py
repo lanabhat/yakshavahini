@@ -87,7 +87,10 @@ PROJECT_REGISTRY = {
         label='Mattukosha',
         model_path='mattukosha.MattukoshaEntry',
         title_field='name',
-        taxonomy_fields=[],
+        taxonomy_fields=[
+            TaxonomyField(name='ragas', label='ಹೊಂದುವ ರಾಗಗಳು', model_path='mattukosha.Raga', multi=True),
+            TaxonomyField(name='situations', label='ಸಂದರ್ಭ ಸೂಕ್ತತೆ', model_path='mattukosha.Situation', multi=True),
+        ],
         link_fields=[
             LinkField(name='pdf_link', label='Document', render_as='pdf'),
             LinkField(name='youtube_video_links', label='YouTube Videos', render_as='youtube', is_array=True),
@@ -98,16 +101,14 @@ PROJECT_REGISTRY = {
             'title': 'name',
             'date': 'date_english',
         },
-        filterable_fields=['name', 'type', 'situations', 'ragas'],
+        filterable_fields=['name', 'type'],
         groupable_fields=[
             GroupableField(name='type', label='ಛಂದಸ್ಸಿನ ವಿಧ'),
-            GroupableField(name='ragas', label='ಹೊಂದುವ ರಾಗಗಳು', multivalue=True),
-            GroupableField(name='situations', label='ಸಂದರ್ಭ ಸೂಕ್ತತೆ', multivalue=True),
         ],
         display_fields=[
             DisplayField(name='type', label='ಛಂದಸ್ಸಿನ ವಿಧ'),
-            DisplayField(name='ragas', label='ಹೊಂದುವ ರಾಗಗಳು'),
-            DisplayField(name='situations', label='ಸಂದರ್ಭ ಸೂಕ್ತತೆ'),
+            DisplayField(name='ragas', label='ಹೊಂದುವ ರಾಗಗಳು', kind='taxonomy-multi'),
+            DisplayField(name='situations', label='ಸಂದರ್ಭ ಸೂಕ್ತತೆ', kind='taxonomy-multi'),
         ],
         date_display_label='ದಸ್ತಾವೇಜನ್ನು ಸೇರಿಸಿದ ದಿನಾಂಕ',
     ),

@@ -3,7 +3,11 @@ Bulk-import Mattukosha entries from a CSV export shaped like the Google
 Sheet ("Mattukosha 150 - Sheet1.csv"): columns ಮಟ್ಟಿನ ಹೆಸರು, ಛಂದಸ್ಸಿನ ವಿಧ,
 ಸಂದರ್ಭ ಸೂಕ್ತತೆ, ಹೊಂದುವ ರಾಗಗಳು, ಮಟ್ಟಿನ ವಿವರದ ದಸ್ತಾವೇಜಿನ ಕೊಂಡಿ,
 ದಸ್ತಾವೇಜನ್ನು ಸೇರಿಸಿದ ದಿನಾಂಕ, ಟಿಪ್ಪಣಿ — mapping 1:1 onto MattukoshaEntry's
-name/type/situations/ragas/pdf_link/date_kannada/notes fields.
+name/type/situations/ragas/pdf_link/date_kannada/notes fields. ಸಂದರ್ಭ ಸೂಕ್ತತೆ
+and ಹೊಂದುವ ರಾಗಗಳು are comma-separated lists of names in the CSV but real
+taxonomy tables (Situation/Raga) on the model — each row's cell gets split
+and get_or_create'd into those tables, same as migration 0003 did for the
+entries that existed before this table split (see _split_names there).
 
 Usage:
     python manage.py import_mattukosha_csv path/to/file.csv
@@ -23,10 +27,11 @@ Pass --yes to skip the prompt and confirm the clear-then-import path
 non-interactively (e.g. from an already-scripted deploy step).
 """
 import csv
+import re
 
 from django.core.management.base import BaseCommand, CommandError
 
-from mattukosha.models import MattukoshaEntry
+from mattukosha.models import MattukoshaEntry, Raga, Situation
 
 COLUMNS = {
     'name': 'ಮಟ್ಟಿನ ಹೆಸರು',
@@ -37,6 +42,21 @@ COLUMNS = {
     'date_kannada': 'ದಸ್ತಾವೇಜನ್ನು ಸೇರಿಸಿದ ದಿನಾಂಕ',
     'notes': 'ಟಿಪ್ಪಣಿ',
 }
+
+
+def split_names(raw):
+    """Comma-separated free text -> a de-duplicated list of clean names.
+    Strips a trailing '.' too (source rows are inconsistent about it, e.g.
+    "ಮೋಹನ." vs "ಮೋಹನ" — without this they'd become two taxonomy entries
+    for the same raga). Mirrors migration 0003's _split_names exactly."""
+    if not raw:
+        return []
+    seen = []
+    for part in raw.split(','):
+        name = re.sub(r'\.+$', '', part.strip()).strip()
+        if name and name not in seen:
+            seen.append(name)
+    return seen
 
 
 class Command(BaseCommand):
@@ -78,8 +98,12 @@ class Command(BaseCommand):
             confirmed = answer.strip().lower() == 'yes'
 
         if confirmed:
-            deleted, _ = MattukoshaEntry.objects.all().delete()
-            self.stdout.write(self.style.WARNING(f'Deleted {deleted} existing entr{"y" if deleted == 1 else "ies"}.'))
+            # .delete()'s own return count includes cascaded rows (the
+            # ragas/situations M2M join-table rows), not just entries — use
+            # the count we already took instead, so this message stays
+            # accurate.
+            MattukoshaEntry.objects.all().delete()
+            self.stdout.write(self.style.WARNING(f'Deleted {existing_count} existing entr{"y" if existing_count == 1 else "ies"}.'))
             existing_names = set()
         else:
             self.stdout.write('Not confirmed — importing only rows missing from the database.')
@@ -88,6 +112,8 @@ class Command(BaseCommand):
         created = 0
         skipped_existing = 0
         skipped_blank = 0
+        situation_cache = {}
+        raga_cache = {}
 
         for row in rows:
             name = (row.get(COLUMNS['name']) or '').strip()
@@ -107,16 +133,25 @@ class Command(BaseCommand):
             def field(key):
                 return (row.get(COLUMNS[key]) or '').strip() or None
 
-            MattukoshaEntry.objects.create(
+            entry = MattukoshaEntry.objects.create(
                 name=name,
                 type=field('type'),
-                situations=field('situations'),
-                ragas=field('ragas'),
                 pdf_link=field('pdf_link'),
                 date_kannada=field('date_kannada'),
                 notes=field('notes'),
                 status='approved',
             )
+
+            for situation_name in split_names(row.get(COLUMNS['situations'])):
+                if situation_name not in situation_cache:
+                    situation_cache[situation_name], _ = Situation.objects.get_or_create(name=situation_name)
+                entry.situations.add(situation_cache[situation_name])
+
+            for raga_name in split_names(row.get(COLUMNS['ragas'])):
+                if raga_name not in raga_cache:
+                    raga_cache[raga_name], _ = Raga.objects.get_or_create(name=raga_name)
+                entry.ragas.add(raga_cache[raga_name])
+
             created += 1
 
         self.stdout.write(self.style.SUCCESS(
