@@ -41,7 +41,7 @@ def serialize_entry(schema, obj):
         'notes': obj.notes,
         'status': obj.status,
         'review_notes': obj.review_notes,
-        'submitted_by': obj.submitted_by.email if obj.submitted_by else '',
+        'submitted_by': obj.submitted_by.username if obj.submitted_by else '',
         'reviewed_at': obj.reviewed_at.isoformat() if obj.reviewed_at else None,
         'view_count': obj.view_count,
         'has_pending_deletion': has_pending_deletion(obj),

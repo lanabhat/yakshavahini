@@ -102,7 +102,7 @@ const PendingQueue: React.FC = () => {
                     {expanded ? <ChevronUp style={{ width: 14, height: 14, color: 'var(--ps-faint)', flexShrink: 0 }} /> : <ChevronDown style={{ width: 14, height: 14, color: 'var(--ps-faint)', flexShrink: 0 }} />}
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ps-text)' }}>{String(e[project.titleField] ?? '')}</div>
-                      <div style={{ fontSize: 12, color: 'var(--ps-muted)' }}>{e.submitted_by}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ps-muted)' }}>Added by {e.submitted_by || 'unknown'}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }} onClick={(evt) => evt.stopPropagation()}>
