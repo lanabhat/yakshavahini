@@ -54,15 +54,16 @@ export const PROJECTS: ProjectConfig[] = [
     dateEnglishField: 'date_english',
     displayFields: [
       { name: 'type', label: 'ಛಂದಸ್ಸಿನ ವಿಧ', kind: 'text' },
-      { name: 'ragas', label: 'ಹೊಂದುವ ರಾಗಗಳು', kind: 'text' },
-      { name: 'situations', label: 'ಸಂದರ್ಭ ಸೂಕ್ತತೆ', kind: 'text' },
+      { name: 'ragas', label: 'ಹೊಂದುವ ರಾಗಗಳು', kind: 'taxonomy-multi' },
+      { name: 'situations', label: 'ಸಂದರ್ಭ ಸೂಕ್ತತೆ', kind: 'taxonomy-multi' },
     ],
     groupFacets: [
       { field: 'type', label: 'ಛಂದಸ್ಸಿನ ವಿಧ' },
+    ],
+    taxonomyFacets: [
       { field: 'ragas', label: 'ಹೊಂದುವ ರಾಗಗಳು' },
       { field: 'situations', label: 'ಸಂದರ್ಭ ಸೂಕ್ತತೆ' },
     ],
-    taxonomyFacets: [],
     cardDescription: (n) => `${n} ಮಟ್ಟುಗಳ ವಿವರಗಳು.`,
   },
   {

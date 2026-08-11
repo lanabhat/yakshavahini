@@ -22,7 +22,10 @@ export const PROJECTS: ProjectConfig[] = [
     apiBase: '/api/v1/mattukosha',
     name: 'Mattukosha',
     titleField: 'name',
-    taxonomyFields: [],
+    taxonomyFields: [
+      { name: 'ragas', label: 'ಹೊಂದುವ ರಾಗಗಳು', multi: true },
+      { name: 'situations', label: 'ಸಂದರ್ಭ ಸೂಕ್ತತೆ', multi: true },
+    ],
   },
   {
     slug: 'pustakakosha',

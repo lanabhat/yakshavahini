@@ -1,20 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { X, Upload, Loader2 } from 'lucide-react';
+import { X, Upload, Loader2, Search } from 'lucide-react';
 import { useEntryForm } from '@/hooks/useEntryForm';
+import MultiAutocompleteInput from '@/components/MultiAutocompleteInput/MultiAutocompleteInput';
+import TaxonomyPicker from '@/components/TaxonomyPicker/TaxonomyPicker';
 import DeleteEntryButton from '@/components/DeleteEntryButton/DeleteEntryButton';
 import { useAuth } from '@/hooks/useAuth';
+
+type PickerField = 'situations' | 'ragas' | null;
 
 const EntryForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const s = useEntryForm(id ? parseInt(id) : undefined);
   const { role } = useAuth();
+  const [openPicker, setOpenPicker] = useState<PickerField>(null);
 
   const inputStyle: React.CSSProperties = {
     padding: '9px 12px', borderRadius: 8, border: '1px solid var(--ps-border)',
     fontSize: 13.5, width: '100%', outline: 'none', background: 'var(--ps-surface)', color: 'var(--ps-text)',
   };
   const labelStyle: React.CSSProperties = { fontSize: 12.5, fontWeight: 600, color: 'var(--ps-muted)', display: 'block', marginBottom: 6 };
+  const browseBtnStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, background: 'none', border: 'none',
+    cursor: 'pointer', fontSize: 12, color: 'var(--ps-accent-text)', fontWeight: 600, padding: 0,
+  };
+
+  const toggleMulti = (values: string[], onChange: (v: string[]) => void) => (name: string) => {
+    onChange(values.includes(name) ? values.filter((v) => v !== name) : [...values, name]);
+  };
 
   if (s.loading) return <Loader2 className="animate-spin" style={{ color: 'var(--ps-accent)' }} />;
 
@@ -36,13 +49,25 @@ const EntryForm: React.FC = () => {
         </div>
 
         <div>
-          <label style={labelStyle}>ಸಂದರ್ಭ ಸೂಕ್ತತೆ (Situations)</label>
-          <textarea style={{ ...inputStyle, minHeight: 60 }} value={s.situations} onChange={(e) => s.setSituations(e.target.value)} />
+          <MultiAutocompleteInput
+            field="situations" label="ಸಂದರ್ಭ ಸೂಕ್ತತೆ (Situations)"
+            values={s.situationNames} onChange={s.setSituationNames}
+            placeholder="Type and press Enter..."
+          />
+          <button type="button" onClick={() => setOpenPicker('situations')} style={browseBtnStyle}>
+            <Search style={{ width: 12, height: 12 }} /> Browse existing
+          </button>
         </div>
 
         <div>
-          <label style={labelStyle}>ಹೊಂದುವ ರಾಗಗಳು (Ragas, comma-separated)</label>
-          <input style={inputStyle} value={s.ragas} onChange={(e) => s.setRagas(e.target.value)} placeholder="ಮಧ್ಯಮಾವತಿ, ಕಲ್ಯಾಣಿ, ಹಂಸಳ" />
+          <MultiAutocompleteInput
+            field="ragas" label="ಹೊಂದುವ ರಾಗಗಳು (Ragas)"
+            values={s.ragaNames} onChange={s.setRagaNames}
+            placeholder="Type and press Enter..."
+          />
+          <button type="button" onClick={() => setOpenPicker('ragas')} style={browseBtnStyle}>
+            <Search style={{ width: 12, height: 12 }} /> Browse existing
+          </button>
         </div>
 
         <div>
@@ -152,6 +177,21 @@ const EntryForm: React.FC = () => {
           )}
         </div>
       </div>
+
+      {openPicker === 'situations' && (
+        <TaxonomyPicker
+          field="situations" label="ಸಂದರ್ಭ ಸೂಕ್ತತೆ (Situations)" mode="multi"
+          selectedNames={s.situationNames} onToggle={toggleMulti(s.situationNames, s.setSituationNames)}
+          onClose={() => setOpenPicker(null)}
+        />
+      )}
+      {openPicker === 'ragas' && (
+        <TaxonomyPicker
+          field="ragas" label="ಹೊಂದುವ ರಾಗಗಳು (Ragas)" mode="multi"
+          selectedNames={s.ragaNames} onToggle={toggleMulti(s.ragaNames, s.setRagaNames)}
+          onClose={() => setOpenPicker(null)}
+        />
+      )}
     </div>
   );
 };

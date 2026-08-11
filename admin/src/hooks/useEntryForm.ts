@@ -7,6 +7,11 @@ import {
 import { uploadDirectlyToDrive } from '@/lib/directDriveUpload';
 import { useProject } from '@/contexts/ProjectContext';
 
+interface TaxonomyRef {
+  id: number;
+  name: string;
+}
+
 export function useEntryForm(id?: number) {
   const navigate = useNavigate();
   const { project } = useProject();
@@ -14,8 +19,8 @@ export function useEntryForm(id?: number) {
 
   const [name, setName] = useState('');
   const [type, setType] = useState('');
-  const [situations, setSituations] = useState('');
-  const [ragas, setRagas] = useState('');
+  const [situationNames, setSituationNames] = useState<string[]>([]);
+  const [ragaNames, setRagaNames] = useState<string[]>([]);
   const [pdfLink, setPdfLink] = useState('');
   const [dateKannada, setDateKannada] = useState('');
   const [dateEnglish, setDateEnglish] = useState('');
@@ -40,8 +45,8 @@ export function useEntryForm(id?: number) {
       const e = res.data;
       setName(e.name as string);
       setType(e.type as string);
-      setSituations(e.situations as string);
-      setRagas(e.ragas as string);
+      setSituationNames(((e.situations as TaxonomyRef[]) || []).map((s) => s.name));
+      setRagaNames(((e.ragas as TaxonomyRef[]) || []).map((r) => r.name));
       setPdfLink(e.pdf_link as string);
       setDateKannada(e.date_kannada as string);
       setDateEnglish(e.date_english as string);
@@ -98,8 +103,8 @@ export function useEntryForm(id?: number) {
       const payload = {
         name,
         type: type || null,
-        situations: situations || null,
-        ragas: ragas || null,
+        situations_names: situationNames,
+        ragas_names: ragaNames,
         pdf_link: pdfLink || null,
         date_kannada: dateKannada || null,
         date_english: dateEnglish || null,
@@ -128,8 +133,8 @@ export function useEntryForm(id?: number) {
     sendForReview, setSendForReview,
     name, setName,
     type, setType,
-    situations, setSituations,
-    ragas, setRagas,
+    situationNames, setSituationNames,
+    ragaNames, setRagaNames,
     pdfLink, setPdfLink,
     dateKannada, setDateKannada,
     dateEnglish, setDateEnglish,
