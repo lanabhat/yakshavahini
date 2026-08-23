@@ -6,25 +6,19 @@ A TWA is a thin Android shell around the PWA — no separate UI code to
 maintain, it just opens the deployed site full-screen (no browser chrome,
 once Digital Asset Links below is verified).
 
-## ⚠️ Signing key — TEST KEY, not for Play Store release
+## Signing key
 
-`android.keystore` in this folder (gitignored, never committed) was generated
-with a throwaway password (`yakshavahini123`) purely to get a working build.
-**Before publishing to Play Store**, generate a real release key with a
-password stored somewhere safe (password manager) — losing it means you can
-never update the published app again:
+`android-release.keystore` in this folder (gitignored, never committed) is
+the real release key — generated once, alias `android`. **The password is
+not stored anywhere in this repo or in chat history beyond the message it was
+shared in** — make sure it's saved in a password manager now if it isn't
+already. Losing it means the app can never be updated again after
+publishing, only replaced under a new package name.
 
-```powershell
-$env:JAVA_HOME = "E:\Java\jdk-17.0.10+7"
-& "E:\Java\jdk-17.0.10+7\bin\keytool.exe" -genkeypair -v -keystore android-release.keystore `
-  -alias android -keyalg RSA -keysize 2048 -validity 10000 `
-  -dname "CN=Yakshavahini, OU=Yakshavahini, O=Yakshavahini, L=, ST=, C=IN"
-```
-
-(In practice, if you enroll in **Play App Signing** — the default Google
-recommends — Google re-signs the app with its own key after upload, and only
-your *upload* key needs this level of care. Either way, don't reuse the test
-key above for anything real.)
+(If you later enroll in **Play App Signing** — the default Google
+recommends — Google re-signs the app with its own key after your first
+upload, and `assetlinks.json` would need updating again with that key's
+fingerprint. Until then, this is the key of record.)
 
 ## Requirements (already installed on this machine — do not reinstall)
 
@@ -48,7 +42,7 @@ resolution issue with MSYS, not a project problem).
 1. Regenerate `twa-manifest.json` if the web manifest changed (name, icons,
    colors, etc. — pulls from the live `https://yakshavahini.web.app/manifest.webmanifest`):
    ```
-   node -e "require('@bubblewrap/core').TwaManifest.fromWebManifest('https://yakshavahini.web.app/manifest.webmanifest').then(m => { m.packageId = 'com.yakshavahini.app'; m.launcherName = 'Yakshavahini'; m.signingKey = { path: './android.keystore', alias: 'android' }; return m.saveToFile('./twa-manifest.json'); })"
+   node -e "require('@bubblewrap/core').TwaManifest.fromWebManifest('https://yakshavahini.web.app/manifest.webmanifest').then(m => { m.packageId = 'com.yakshavahini.app'; m.launcherName = 'Yakshavahini'; m.signingKey = { path: './android-release.keystore', alias: 'android' }; return m.saveToFile('./twa-manifest.json'); })"
    ```
 2. Regenerate the Android project + build unsigned APK/bundle:
    ```powershell
@@ -68,10 +62,10 @@ resolution issue with MSYS, not a project problem).
 
 `../public/public/.well-known/assetlinks.json` declares this app's signing
 certificate to Chrome, so the TWA opens without a URL bar (otherwise it falls
-back to a Custom Tab with visible browser chrome). **This currently has the
-TEST key's fingerprint** — once you generate a real release key (or enroll in
-Play App Signing, which issues its own), regenerate this file with the new
-SHA-256 fingerprint:
+back to a Custom Tab with visible browser chrome). Currently carries the
+release key's fingerprint (`65:38:A4:0C:...:C8:7D:95`). If the signing key
+ever changes (e.g. enrolling in Play App Signing later), regenerate this
+file with the new SHA-256 fingerprint:
 
 ```powershell
 & "E:\Java\jdk-17.0.10+7\bin\keytool.exe" -list -v -keystore <your-keystore> -alias android
@@ -86,7 +80,7 @@ it later without effectively shipping a new app.
 
 ## Next steps toward a Play Store listing
 
-1. Generate the real release key (above) and update `assetlinks.json`.
+1. ~~Generate the real release key and update `assetlinks.json`.~~ Done.
 2. Create an app in Google Play Console, enroll in Play App Signing.
 3. Upload `app-release-bundle.aab` (App Bundle, not the APK — Play Store wants `.aab`).
 4. Fill in store listing (screenshots, description, privacy policy URL, content rating).

@@ -1,6 +1,6 @@
-# Signing keys — never commit. This is a throwaway test key for now;
-# generate a fresh one with a real, safely-stored password before
-# publishing to Play Store (see README.md in this folder).
+# Signing keys — never commit. android-release.keystore is the real
+# release key; its password lives only in a password manager (see
+# README.md in this folder), never in the repo.
 *.keystore
 *.jks
 
