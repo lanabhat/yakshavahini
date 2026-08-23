@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.yakshavahini.app",
+    "sha256_cert_fingerprints": [
+      "5C:50:25:B4:BD:A2:57:78:7A:68:1E:CC:A2:84:C2:05:B2:08:52:73:D2:36:8E:CC:74:C5:13:E7:0A:16:FA:F1"
+    ]
+  }
+}]

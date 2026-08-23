@@ -1,0 +1,16 @@
+# Signing keys — never commit. This is a throwaway test key for now;
+# generate a fresh one with a real, safely-stored password before
+# publishing to Play Store (see README.md in this folder).
+*.keystore
+*.jks
+
+node_modules
+
+# Bubblewrap-generated Android project — regenerate with `npx bubblewrap build`
+app/build
+build
+.gradle
+local.properties
+*.apk
+*.apk.idsig
+*.aab
