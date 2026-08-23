@@ -40,7 +40,11 @@ const EntryDetail: React.FC = () => {
     return <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--ps-muted)' }}>Not found</div>;
   }
 
-  const pdfLink = (entry[project.linkField || 'pdf_link'] as string) || '';
+  const pdfLinkRaw = (entry[project.linkField || 'pdf_link'] as string) || '';
+  // Some entries have placeholder text (e.g. "yet to be compiled") instead of
+  // a real URL in this field — only treat it as a link if it actually looks
+  // like one, matching the same guard EntryCard/EntryListRow already use.
+  const pdfLink = pdfLinkRaw.startsWith('http') ? pdfLinkRaw : '';
   const pdfEmbed = getDocEmbedUrl(pdfLink);
   const videoLinks = (entry.youtube_video_links as string[]) || [];
   const videoIds = videoLinks.map(extractYoutubeId).filter(Boolean) as string[];
