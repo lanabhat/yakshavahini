@@ -85,7 +85,7 @@ const Library: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 16px 60px' }}>
-      <h1 className="ps-serif" style={{ fontWeight: 600, fontSize: 26, margin: '0 0 4px', color: 'var(--ps-text)' }}>Library</h1>
+      <h1 className="kn-serif" style={{ fontWeight: 600, fontSize: 26, margin: '0 0 4px', color: 'var(--ps-text)' }}>{project.nameKannada}</h1>
       <div style={{ fontSize: 13, color: 'var(--ps-muted)', marginBottom: 20 }}>{!loading && `${total} entries`}</div>
 
       <button
