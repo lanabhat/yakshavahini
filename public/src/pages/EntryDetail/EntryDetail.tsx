@@ -58,6 +58,13 @@ const EntryDetail: React.FC = () => {
     .map((f) => ({ field: f, value: displayFieldValue(entry, f) }))
     .filter((f) => f.value);
 
+  const openButtonStyle: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
+    background: 'var(--ps-grad)', color: '#fff', textDecoration: 'none',
+    borderRadius: 999, padding: '10px 20px', fontWeight: 700, fontSize: 13.5,
+    boxShadow: 'var(--ps-shadow-sm)',
+  };
+
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '22px 22px 60px' }}>
       <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--ps-muted)', cursor: 'pointer', marginBottom: 18, fontSize: 13.5 }}>
@@ -94,13 +101,19 @@ const EntryDetail: React.FC = () => {
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)' }}>Document</span>
-            <a href={pdfLink} target="_blank" rel="noopener"
-              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: 'var(--ps-accent-text)' }}>
-              <ExternalLink style={{ width: 13, height: 13 }} /> Open
-            </a>
+            {pdfEmbed && (
+              <a href={pdfLink} target="_blank" rel="noopener"
+                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: 'var(--ps-accent-text)' }}>
+                <ExternalLink style={{ width: 13, height: 13 }} /> Open
+              </a>
+            )}
           </div>
-          {pdfEmbed && (
+          {pdfEmbed ? (
             <iframe src={pdfEmbed} title={title} style={{ width: '100%', height: '70vh', border: '1px solid var(--ps-border)', borderRadius: 12 }} />
+          ) : (
+            <a href={pdfLink} target="_blank" rel="noopener" style={openButtonStyle}>
+              <ExternalLink style={{ width: 15, height: 15 }} /> Open Document
+            </a>
           )}
         </div>
       )}
@@ -109,12 +122,14 @@ const EntryDetail: React.FC = () => {
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)' }}>Video</span>
-            <a href={videoLink} target="_blank" rel="noopener"
-              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: 'var(--ps-accent-text)' }}>
-              <ExternalLink style={{ width: 13, height: 13 }} /> Open
-            </a>
+            {primaryVideoId && (
+              <a href={videoLink} target="_blank" rel="noopener"
+                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: 'var(--ps-accent-text)' }}>
+                <ExternalLink style={{ width: 13, height: 13 }} /> Open
+              </a>
+            )}
           </div>
-          {primaryVideoId && (
+          {primaryVideoId ? (
             <div style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--ps-border)' }}>
               <iframe
                 src={`https://www.youtube.com/embed/${primaryVideoId}`}
@@ -124,6 +139,10 @@ const EntryDetail: React.FC = () => {
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
               />
             </div>
+          ) : (
+            <a href={videoLink} target="_blank" rel="noopener" style={openButtonStyle}>
+              <ExternalLink style={{ width: 15, height: 15 }} /> Open Video
+            </a>
           )}
         </div>
       )}
