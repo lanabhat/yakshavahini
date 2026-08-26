@@ -297,3 +297,26 @@ export const updateUser = (id: number, data: { role?: string; is_active?: boolea
 
 export const createUser = (data: { email: string; role: string; name?: string }) =>
   api.post<User & { password: string }>('/api/v1/admin/users/', data);
+
+// ── Drishya-Kavya Sanchaya CSV import ────────────────────────────────────
+// Project-specific (not schema-driven) — see backend/drishyashravyakosha/
+// csv_import.py. `clear` mirrors the management command's --yes /
+// confirmed path: true wipes existing entries first, false only imports
+// rows whose subject isn't already in the database.
+export interface CsvImportSummary {
+  total_rows: number;
+  existing_before: number;
+  deleted: number;
+  created: number;
+  skipped_existing: number;
+  skipped_blank: number;
+}
+
+export const importDrishyaShravyaCsv = (project: ProjectConfig, file: File, clear: boolean) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('clear', String(clear));
+  return api.post<CsvImportSummary>(`${project.apiBase}/import-csv/`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};

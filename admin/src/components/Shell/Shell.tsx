@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutGrid, ListChecks, HardDrive, Users, Tags, SlidersHorizontal, Rows3, Trash2, FileText, Home } from 'lucide-react';
+import { LayoutGrid, ListChecks, HardDrive, Users, Tags, SlidersHorizontal, Rows3, Trash2, FileText, Home, Upload } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProject } from '@/contexts/ProjectContext';
 import { PROJECTS } from '@/config/projects';
@@ -18,6 +18,7 @@ const Shell: React.FC = () => {
     { label: 'Deletion Requests', href: '/deletions', icon: Trash2, roles: ['editor', 'admin'] },
     { label: 'Landing Page', href: '/landing-page', icon: FileText, roles: ['editor', 'admin'] },
     { label: 'Home Page', href: '/home-page', icon: Home, roles: ['editor', 'admin'] },
+    ...(project.slug === 'drishyashravyakosha' ? [{ label: 'Import CSV', href: '/import-csv', icon: Upload, roles: ['admin'] }] : []),
     { label: 'Drive Accounts', href: '/drive-accounts', icon: HardDrive, roles: ['admin'] },
     { label: 'Users', href: '/users', icon: Users, roles: ['admin'] },
   ];
