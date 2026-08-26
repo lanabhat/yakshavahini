@@ -142,11 +142,14 @@ export const PROJECTS: ProjectConfig[] = [
     displayFields: [
       { name: 'event_type', label: 'ಕಾರ್ಯಕ್ರಮ', kind: 'text' },
       { name: 'details', label: 'ವಿವರಗಳು', kind: 'text' },
+      { name: 'presenters', label: 'ಉಪನ್ಯಾಸಕರು', kind: 'taxonomy-multi' },
     ],
     groupFacets: [
       { field: 'event_type', label: 'ಕಾರ್ಯಕ್ರಮ' },
     ],
-    taxonomyFacets: [],
+    taxonomyFacets: [
+      { field: 'presenters', label: 'ಉಪನ್ಯಾಸಕರು' },
+    ],
     cardDescription: (n) => `${n} ಅಂತರ್ಜಾಲ ಪ್ರಸಾರ ಕಾರ್ಯಕ್ರಮಗಳ ವಿವರ`,
   },
 ];
