@@ -1,14 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Library, LayoutGrid } from 'lucide-react';
+import { Home, LayoutGrid } from 'lucide-react';
 import { useProject } from '@/contexts/ProjectContext';
 
 const BottomNav: React.FC = () => {
   const project = useProject();
 
   const items = [
-    { label: 'Project', href: `/${project.slug}`, icon: LayoutGrid, end: true },
-    { label: 'ಪ್ರವೇಶಿಸಿ', href: `/${project.slug}/library`, icon: Library, end: false },
+    { label: project.nameKannada, href: `/${project.slug}`, icon: LayoutGrid, end: true },
     { label: 'Home', href: '/', icon: Home, end: true },
   ];
 

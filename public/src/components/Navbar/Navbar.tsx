@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Home } from 'lucide-react';
+import { Search, Home, ArrowLeft } from 'lucide-react';
 import { useProject } from '@/contexts/ProjectContext';
 import { useTheme, type Theme } from '@/contexts/ThemeContext';
 
@@ -25,6 +25,10 @@ const Navbar: React.FC = () => {
   return (
     <header style={{ background: 'var(--ps-bg)', borderBottom: '1px solid var(--ps-border)' }} className="sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-5 h-14 flex items-center gap-2 sm:gap-5">
+        <button onClick={() => navigate(-1)} title="Back" className="flex items-center shrink-0"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ps-muted)', padding: 4 }}>
+          <ArrowLeft style={{ width: 18, height: 18 }} />
+        </button>
         <Link to={`/${project.slug}`} className="flex items-center gap-2.5 shrink-0 min-w-0">
           <div style={{
             width: 36, height: 36, borderRadius: 10, background: 'var(--ps-grad)',
@@ -86,7 +90,6 @@ const Navbar: React.FC = () => {
         <Link to="/" title="Home" className="hidden md:flex items-center shrink-0" style={{ color: 'var(--ps-faint)' }}>
           <Home style={{ width: 16, height: 16 }} />
         </Link>
-        <Link to={`/${project.slug}/library`} className="kn-sans shrink-0" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-muted)', whiteSpace: 'nowrap' }}>ಪ್ರವೇಶಿಸಿ</Link>
       </div>
     </header>
   );
