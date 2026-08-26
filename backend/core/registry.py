@@ -187,7 +187,7 @@ PROJECT_REGISTRY = {
     ),
     'drishyashravyakosha': ProjectSchema(
         slug='drishyashravyakosha',
-        label='Drishya-Shravya Kosha',
+        label='Drishya-Kavya Sanchaya',
         model_path='drishyashravyakosha.DrishyaShravyaKoshaEntry',
         title_field='subject',
         taxonomy_fields=[

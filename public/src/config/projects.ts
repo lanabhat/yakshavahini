@@ -131,8 +131,8 @@ export const PROJECTS: ProjectConfig[] = [
   {
     slug: 'drishyashravyakosha',
     apiBase: '/api/v1/drishyashravyakosha',
-    name: 'Drishya-Shravya Kosha',
-    nameKannada: 'ದೃಶ್ಯ-ಶ್ರಾವ್ಯ ಕೋಶ',
+    name: 'Drishya-Kavya Sanchaya',
+    nameKannada: 'ದೃಶ್ಯ-ಕಾವ್ಯ ಸಂಚಯ',
     active: true,
     titleField: 'subject',
     videoLinkField: 'video_link',
