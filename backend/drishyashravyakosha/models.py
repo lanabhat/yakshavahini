@@ -1,6 +1,10 @@
 from django.db import models
 
-from core.models import CatalogEntryBase
+from core.models import CatalogEntryBase, TaxonomyBase
+
+
+class Presenter(TaxonomyBase):
+    pass
 
 
 class DrishyaShravyaKoshaEntry(CatalogEntryBase):
@@ -12,6 +16,7 @@ class DrishyaShravyaKoshaEntry(CatalogEntryBase):
     date_kannada = models.CharField(max_length=50, blank=True, null=True)  # ದಿನಾಂಕ
     date_english = models.DateField(blank=True, null=True)
     video_link = models.URLField(max_length=500, blank=True, null=True)  # YouTube/Facebook link
+    presenters = models.ManyToManyField(Presenter, blank=True, related_name='entries')  # ಉಪನ್ಯಾಸಕರು
 
     class Meta:
         ordering = ['-created_at']

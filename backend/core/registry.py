@@ -190,7 +190,9 @@ PROJECT_REGISTRY = {
         label='Drishya-Shravya Kosha',
         model_path='drishyashravyakosha.DrishyaShravyaKoshaEntry',
         title_field='subject',
-        taxonomy_fields=[],
+        taxonomy_fields=[
+            TaxonomyField(name='presenters', label='ಉಪನ್ಯಾಸಕರು', model_path='drishyashravyakosha.Presenter', multi=True),
+        ],
         link_fields=[
             LinkField(name='video_link', label='YouTube/Facebook Link', render_as='youtube'),
         ],
@@ -207,6 +209,7 @@ PROJECT_REGISTRY = {
         display_fields=[
             DisplayField(name='event_type', label='ಕಾರ್ಯಕ್ರಮ'),
             DisplayField(name='details', label='ವಿವರಗಳು'),
+            DisplayField(name='presenters', label='ಉಪನ್ಯಾಸಕರು', kind='taxonomy-multi'),
         ],
         date_display_label='ಪ್ರಸಾರದ ದಿನಾಂಕ',
     ),
