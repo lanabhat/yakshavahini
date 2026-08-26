@@ -162,14 +162,24 @@ const ProjectPicker: React.FC = () => {
               ))}
             </div>
 
-            <a href="https://www.yakshavahini.com" target="_blank" rel="noopener"
-              style={{
-                display: 'inline-block', marginTop: 32, background: 'var(--ps-grad)', color: '#fff',
-                textDecoration: 'none', borderRadius: 999, padding: '12px 28px', fontWeight: 700,
-                fontSize: 14, boxShadow: 'var(--ps-shadow-md)',
-              }}>
-              ನಮ್ಮ ಅಂತರ್ಜಾಲ ತಾಣ
-            </a>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginTop: 32 }}>
+              <a href="https://www.yakshavahini.com" target="_blank" rel="noopener"
+                style={{
+                  display: 'inline-block', background: 'var(--ps-grad)', color: '#fff',
+                  textDecoration: 'none', borderRadius: 999, padding: '12px 28px', fontWeight: 700,
+                  fontSize: 14, boxShadow: 'var(--ps-shadow-md)',
+                }}>
+                ನಮ್ಮ ಅಂತರ್ಜಾಲ ತಾಣ
+              </a>
+              <Link to="/contact"
+                style={{
+                  display: 'inline-block', background: 'var(--ps-surface)', color: 'var(--ps-accent-text)',
+                  border: '1px solid var(--ps-border)', textDecoration: 'none', borderRadius: 999,
+                  padding: '12px 28px', fontWeight: 700, fontSize: 14, boxShadow: 'var(--ps-shadow-sm)',
+                }}>
+                ಸಂಪರ್ಕ
+              </Link>
+            </div>
           </>
         )}
       </div>

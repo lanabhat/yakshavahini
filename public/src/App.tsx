@@ -7,6 +7,7 @@ import ProjectIndex from '@/pages/ProjectLayout/ProjectIndex';
 import Home from '@/pages/Home/Home';
 import Library from '@/pages/Library/Library';
 import EntryDetail from '@/pages/EntryDetail/EntryDetail';
+import Contact from '@/pages/Contact/Contact';
 
 const App: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const App: React.FC = () => {
         <div className="min-h-screen" style={{ background: 'var(--ps-bg)' }}>
           <Routes>
             <Route path="/" element={<ProjectPicker />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/:project" element={<ProjectLayout />}>
               <Route index element={<ProjectIndex />} />
               <Route path="home" element={<Home />} />
