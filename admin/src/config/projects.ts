@@ -46,6 +46,13 @@ export const PROJECTS: ProjectConfig[] = [
     titleField: 'name_of_the_org',
     taxonomyFields: [],
   },
+  {
+    slug: 'drishyashravyakosha',
+    apiBase: '/api/v1/drishyashravyakosha',
+    name: 'Drishya-Shravya Kosha',
+    titleField: 'subject',
+    taxonomyFields: [],
+  },
 ];
 
 export const getProject = (slug?: string): ProjectConfig =>
