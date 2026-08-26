@@ -48,6 +48,9 @@ const EntryDetail: React.FC = () => {
   const pdfEmbed = getDocEmbedUrl(pdfLink);
   const videoLinks = (entry.youtube_video_links as string[]) || [];
   const videoIds = videoLinks.map(extractYoutubeId).filter(Boolean) as string[];
+  const videoLinkRaw = project.videoLinkField ? (entry[project.videoLinkField] as string) || '' : '';
+  const videoLink = videoLinkRaw.startsWith('http') ? videoLinkRaw : '';
+  const primaryVideoId = videoLink ? extractYoutubeId(videoLink) : null;
   const title = (entry[project.titleField] as string) || '';
   const dateKannada = project.dateKannadaField ? (entry[project.dateKannadaField] as string) : '';
   const dateEnglish = project.dateEnglishField ? (entry[project.dateEnglishField] as string) : '';
@@ -98,6 +101,29 @@ const EntryDetail: React.FC = () => {
           </div>
           {pdfEmbed && (
             <iframe src={pdfEmbed} title={title} style={{ width: '100%', height: '70vh', border: '1px solid var(--ps-border)', borderRadius: 12 }} />
+          )}
+        </div>
+      )}
+
+      {videoLink && (
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ps-text)' }}>Video</span>
+            <a href={videoLink} target="_blank" rel="noopener"
+              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: 'var(--ps-accent-text)' }}>
+              <ExternalLink style={{ width: 13, height: 13 }} /> Open
+            </a>
+          </div>
+          {primaryVideoId && (
+            <div style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--ps-border)' }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${primaryVideoId}`}
+                title={title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+              />
+            </div>
           )}
         </div>
       )}

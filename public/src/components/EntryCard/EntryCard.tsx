@@ -26,7 +26,8 @@ const EntryCard: React.FC<Props> = ({ entry, listFields }) => {
   const linkValue = (entry[project.linkField || 'pdf_link'] as string) || '';
   const hasPdf = linkValue.startsWith('http');
   const videoLinks = entry.youtube_video_links as string[] | undefined;
-  const hasVideo = !!videoLinks && videoLinks.length > 0;
+  const primaryVideoLink = project.videoLinkField ? (entry[project.videoLinkField] as string) || '' : '';
+  const hasVideo = (!!videoLinks && videoLinks.length > 0) || primaryVideoLink.startsWith('http');
   const dateEnglish = project.dateEnglishField ? (entry[project.dateEnglishField] as string) : '';
   const dateKannada = project.dateKannadaField ? (entry[project.dateKannadaField] as string) : '';
   const year = dateEnglish ? new Date(dateEnglish).getFullYear() : '';

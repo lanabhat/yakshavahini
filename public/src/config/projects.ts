@@ -22,6 +22,11 @@ export interface ProjectConfig {
   // Which entry field holds the primary document link. Defaults to
   // "pdf_link" (Mattukosha/Pustaka Kosha's convention) when unset.
   linkField?: string;
+  // Which entry field holds a single primary video/broadcast link (as
+  // opposed to `youtube_video_links`, an array of supplementary videos).
+  // When set, EntryCard/EntryDetail read this field, embed it inline if
+  // it's a YouTube URL, and otherwise render a plain "Open ↗" link.
+  videoLinkField?: string;
   // A short scalar/taxonomy-single field shown under the title on
   // EntryCard (e.g. Mattukosha's "type", Pustaka Kosha's "category").
   cardSubtitleField?: string;
@@ -122,6 +127,27 @@ export const PROJECTS: ProjectConfig[] = [
     ],
     taxonomyFacets: [],
     cardDescription: (n) => `${n} ಸಂಘಟನೆಗಳ ವಿವರ`,
+  },
+  {
+    slug: 'drishyashravyakosha',
+    apiBase: '/api/v1/drishyashravyakosha',
+    name: 'Drishya-Shravya Kosha',
+    nameKannada: 'ದೃಶ್ಯ-ಶ್ರಾವ್ಯ ಕೋಶ',
+    active: true,
+    titleField: 'subject',
+    videoLinkField: 'video_link',
+    cardSubtitleField: 'event_type',
+    dateKannadaField: 'date_kannada',
+    dateEnglishField: 'date_english',
+    displayFields: [
+      { name: 'event_type', label: 'ಕಾರ್ಯಕ್ರಮ', kind: 'text' },
+      { name: 'details', label: 'ವಿವರಗಳು', kind: 'text' },
+    ],
+    groupFacets: [
+      { field: 'event_type', label: 'ಕಾರ್ಯಕ್ರಮ' },
+    ],
+    taxonomyFacets: [],
+    cardDescription: (n) => `${n} ಅಂತರ್ಜಾಲ ಪ್ರಸಾರ ಕಾರ್ಯಕ್ರಮಗಳ ವಿವರ`,
   },
 ];
 

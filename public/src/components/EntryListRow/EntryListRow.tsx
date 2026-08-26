@@ -17,6 +17,8 @@ const EntryListRow: React.FC<Props> = ({ entry, listFields }) => {
   const navigate = useNavigate();
   const linkValue = (entry[project.linkField || 'pdf_link'] as string) || '';
   const hasPdf = linkValue.startsWith('http');
+  const primaryVideoLink = project.videoLinkField ? (entry[project.videoLinkField] as string) || '' : '';
+  const hasVideo = primaryVideoLink.startsWith('http');
   const title = (entry[project.titleField] as string) || '—';
   const subtitle = subtitleValue(entry, project.cardSubtitleField);
   const dateEnglish = project.dateEnglishField ? (entry[project.dateEnglishField] as string) : '';
@@ -59,6 +61,9 @@ const EntryListRow: React.FC<Props> = ({ entry, listFields }) => {
       </div>
       {hasPdf && (
         <span style={{ fontSize: 9.5, fontWeight: 800, background: 'var(--ps-accent-soft)', color: 'var(--ps-accent-text)', borderRadius: 6, padding: '3px 6px', flexShrink: 0 }}>PDF</span>
+      )}
+      {hasVideo && (
+        <span style={{ fontSize: 9.5, fontWeight: 800, background: 'var(--ps-accent-soft)', color: 'var(--ps-accent-text)', borderRadius: 6, padding: '3px 6px', flexShrink: 0 }}>▶</span>
       )}
     </div>
   );
