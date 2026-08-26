@@ -100,7 +100,7 @@ const ProjectPicker: React.FC = () => {
       </div>
       <div style={{ maxWidth: 640, padding: '40px 22px', textAlign: 'center' }}>
         <img
-          src="/yakshavahini.svg" alt="Yakshavahini" onClick={handleLogoClick}
+          src={theme === 'dark' ? '/yakshavahini-dark.svg' : '/yakshavahini.svg'} alt="Yakshavahini" onClick={handleLogoClick}
           style={{ width: '100%', maxWidth: 480, height: 'auto', margin: '0 auto 20px', display: 'block', cursor: 'pointer' }}
         />
 

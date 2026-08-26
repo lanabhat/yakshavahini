@@ -30,7 +30,7 @@ const Navbar: React.FC = () => {
           <ArrowLeft style={{ width: 18, height: 18 }} />
         </button>
         <Link to={`/${project.slug}`} className="flex items-center gap-2.5 shrink-0 min-w-0">
-          <img src="/favicon_src.png" alt="Yakshavahini" style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0 }} />
+          <img src={theme === 'dark' ? '/favicon_gold.png' : '/favicon_src.png'} alt="Yakshavahini" style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0 }} />
           <div style={{ lineHeight: 1.1, minWidth: 0 }} className="hidden sm:block">
             <div className="kn-serif truncate" style={{ fontWeight: 600, fontSize: 16, color: 'var(--ps-text)' }}>{project.nameKannada}</div>
             <div className="ps-serif truncate" style={{ fontSize: 11, color: 'var(--ps-muted)' }}>{project.name}</div>
