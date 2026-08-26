@@ -4,6 +4,11 @@ import { toast } from 'sonner';
 import { createEntry, updateEntry, fetchEntry } from '@/services/api';
 import { useProject } from '@/contexts/ProjectContext';
 
+interface TaxonomyRef {
+  id: number;
+  name: string;
+}
+
 export function useDrishyaShravyaEntryForm(id?: number) {
   const navigate = useNavigate();
   const { project } = useProject();
@@ -15,6 +20,7 @@ export function useDrishyaShravyaEntryForm(id?: number) {
   const [dateKannada, setDateKannada] = useState('');
   const [dateEnglish, setDateEnglish] = useState('');
   const [videoLink, setVideoLink] = useState('');
+  const [presenterNames, setPresenterNames] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
@@ -33,6 +39,7 @@ export function useDrishyaShravyaEntryForm(id?: number) {
       setDateKannada((e.date_kannada as string) || '');
       setDateEnglish((e.date_english as string) || '');
       setVideoLink((e.video_link as string) || '');
+      setPresenterNames(((e.presenters as TaxonomyRef[]) || []).map((p) => p.name));
       setNotes((e.notes as string) || '');
       setStatus(e.status);
       setHasPendingDeletion(e.has_pending_deletion);
@@ -53,6 +60,7 @@ export function useDrishyaShravyaEntryForm(id?: number) {
         date_kannada: dateKannada || null,
         date_english: dateEnglish || null,
         video_link: videoLink || null,
+        presenters_names: presenterNames,
         notes: notes || null,
         action,
         ...(action === 'submit' && sendForReview ? { send_for_review: true } : {}),
@@ -81,6 +89,7 @@ export function useDrishyaShravyaEntryForm(id?: number) {
     dateKannada, setDateKannada,
     dateEnglish, setDateEnglish,
     videoLink, setVideoLink,
+    presenterNames, setPresenterNames,
     notes, setNotes,
     saving, handleSave,
   };

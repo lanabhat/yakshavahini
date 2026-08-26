@@ -51,7 +51,9 @@ export const PROJECTS: ProjectConfig[] = [
     apiBase: '/api/v1/drishyashravyakosha',
     name: 'Drishya-Shravya Kosha',
     titleField: 'subject',
-    taxonomyFields: [],
+    taxonomyFields: [
+      { name: 'presenters', label: 'ಉಪನ್ಯಾಸಕರು', multi: true },
+    ],
   },
 ];
 

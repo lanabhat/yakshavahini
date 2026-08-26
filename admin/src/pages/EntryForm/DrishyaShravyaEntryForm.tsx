@@ -1,20 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { useDrishyaShravyaEntryForm } from '@/hooks/useDrishyaShravyaEntryForm';
+import MultiAutocompleteInput from '@/components/MultiAutocompleteInput/MultiAutocompleteInput';
+import TaxonomyPicker from '@/components/TaxonomyPicker/TaxonomyPicker';
 import DeleteEntryButton from '@/components/DeleteEntryButton/DeleteEntryButton';
 import { useAuth } from '@/hooks/useAuth';
+
+type PickerField = 'presenters' | null;
 
 const DrishyaShravyaEntryForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const s = useDrishyaShravyaEntryForm(id ? parseInt(id) : undefined);
   const { role } = useAuth();
+  const [openPicker, setOpenPicker] = useState<PickerField>(null);
 
   const inputStyle: React.CSSProperties = {
     padding: '9px 12px', borderRadius: 8, border: '1px solid var(--ps-border)',
     fontSize: 13.5, width: '100%', outline: 'none', background: 'var(--ps-surface)', color: 'var(--ps-text)',
   };
   const labelStyle: React.CSSProperties = { fontSize: 12.5, fontWeight: 600, color: 'var(--ps-muted)', display: 'block', marginBottom: 6 };
+  const browseBtnStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, background: 'none', border: 'none',
+    cursor: 'pointer', fontSize: 12, color: 'var(--ps-accent-text)', fontWeight: 600, padding: 0,
+  };
+
+  const toggleMulti = (values: string[], onChange: (v: string[]) => void) => (name: string) => {
+    onChange(values.includes(name) ? values.filter((v) => v !== name) : [...values, name]);
+  };
 
   if (s.loading) return <Loader2 className="animate-spin" style={{ color: 'var(--ps-accent)' }} />;
 
@@ -58,6 +71,17 @@ const DrishyaShravyaEntryForm: React.FC = () => {
         </div>
 
         <div>
+          <MultiAutocompleteInput
+            field="presenters" label="ಉಪನ್ಯಾಸಕರು (Presenters)"
+            values={s.presenterNames} onChange={s.setPresenterNames}
+            placeholder="Type and press Enter..."
+          />
+          <button type="button" onClick={() => setOpenPicker('presenters')} style={browseBtnStyle}>
+            <Search style={{ width: 12, height: 12 }} /> Browse existing
+          </button>
+        </div>
+
+        <div>
           <label style={labelStyle}>ಹೆಚ್ಚಿನ ವಿವರಗಳು (Additional Info)</label>
           <textarea style={{ ...inputStyle, minHeight: 60 }} value={s.notes} onChange={(e) => s.setNotes(e.target.value)} />
         </div>
@@ -83,6 +107,14 @@ const DrishyaShravyaEntryForm: React.FC = () => {
           )}
         </div>
       </div>
+
+      {openPicker === 'presenters' && (
+        <TaxonomyPicker
+          field="presenters" label="ಉಪನ್ಯಾಸಕರು (Presenters)" mode="multi"
+          selectedNames={s.presenterNames} onToggle={toggleMulti(s.presenterNames, s.setPresenterNames)}
+          onClose={() => setOpenPicker(null)}
+        />
+      )}
     </div>
   );
 };
