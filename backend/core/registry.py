@@ -185,6 +185,31 @@ PROJECT_REGISTRY = {
             DisplayField(name='head_quarter', label='ಪ್ರಧಾನ ಕಛೇರಿಯ ಸ್ಥಳ'),
         ],
     ),
+    'drishyashravyakosha': ProjectSchema(
+        slug='drishyashravyakosha',
+        label='Drishya-Shravya Kosha',
+        model_path='drishyashravyakosha.DrishyaShravyaKoshaEntry',
+        title_field='subject',
+        taxonomy_fields=[],
+        link_fields=[
+            LinkField(name='video_link', label='YouTube/Facebook Link', render_as='youtube'),
+        ],
+        date_fields=['date_kannada', 'date_english'],
+        sortable_fields={
+            'entry_id': 'entry_id',
+            'title': 'subject',
+            'date': 'date_english',
+        },
+        filterable_fields=['subject', 'event_type', 'details'],
+        groupable_fields=[
+            GroupableField(name='event_type', label='ಕಾರ್ಯಕ್ರಮ'),
+        ],
+        display_fields=[
+            DisplayField(name='event_type', label='ಕಾರ್ಯಕ್ರಮ'),
+            DisplayField(name='details', label='ವಿವರಗಳು'),
+        ],
+        date_display_label='ಪ್ರಸಾರದ ದಿನಾಂಕ',
+    ),
 }
 
 
