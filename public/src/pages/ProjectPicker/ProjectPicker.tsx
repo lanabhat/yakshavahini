@@ -171,6 +171,14 @@ const ProjectPicker: React.FC = () => {
                 }}>
                 ನಮ್ಮ ಅಂತರ್ಜಾಲ ತಾಣ
               </a>
+              <a href="https://blog.yakshavahini.com" target="_blank" rel="noopener"
+                style={{
+                  display: 'inline-block', background: 'var(--ps-surface)', color: 'var(--ps-accent-text)',
+                  border: '1px solid var(--ps-border)', textDecoration: 'none', borderRadius: 999,
+                  padding: '12px 28px', fontWeight: 700, fontSize: 14, boxShadow: 'var(--ps-shadow-sm)',
+                }}>
+                ಬ್ಲಾಗ್
+              </a>
               <Link to="/contact"
                 style={{
                   display: 'inline-block', background: 'var(--ps-surface)', color: 'var(--ps-accent-text)',
