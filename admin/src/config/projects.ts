@@ -49,7 +49,7 @@ export const PROJECTS: ProjectConfig[] = [
   {
     slug: 'drishyashravyakosha',
     apiBase: '/api/v1/drishyashravyakosha',
-    name: 'Drishya-Kavya Sanchaya',
+    name: 'Drishya-Shravya Sanchaya',
     titleField: 'subject',
     taxonomyFields: [
       { name: 'presenters', label: 'ಉಪನ್ಯಾಸಕರು', multi: true },
