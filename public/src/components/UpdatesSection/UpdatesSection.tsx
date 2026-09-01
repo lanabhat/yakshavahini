@@ -20,7 +20,7 @@ const UpdatesSection: React.FC<Props> = ({ updates }) => (
   <div style={{ borderTop: '1px solid var(--ps-border)', padding: 'clamp(24px, 6vw, 36px) clamp(14px, 4vw, 22px)' }}>
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
       <h2 className="kn-serif" style={{ fontSize: 'clamp(14px, 3.5vw, 16px)', fontWeight: 700, color: 'var(--ps-muted)', marginBottom: 16, textAlign: 'center' }}>
-        Updates
+        ಗಮನಿಸಿ:
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {updates.map((u) => (
