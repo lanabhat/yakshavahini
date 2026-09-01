@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'pustakakosha',
     'sanghatanakosha',
     'drishyashravyakosha',
+    'prasangayadi',
 ]
 
 MIDDLEWARE = [

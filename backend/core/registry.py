@@ -213,6 +213,42 @@ PROJECT_REGISTRY = {
         ],
         date_display_label='ಪ್ರಸಾರದ ದಿನಾಂಕ',
     ),
+    'prasangayadi': ProjectSchema(
+        slug='prasangayadi',
+        label='Prasanga Yadi',
+        model_path='prasangayadi.PrasangaYadiEntry',
+        title_field='prasanga_name',
+        taxonomy_fields=[
+            TaxonomyField(name='kavi', label='ಪ್ರಸಂಗ ಕವಿ', model_path='prasangayadi.Kavi', multi=True),
+        ],
+        link_fields=[
+            LinkField(name='prasanga_kosha_link', label='ಯಕ್ಷಪ್ರಸಂಗಕೋಶದಲ್ಲಿ ಪ್ರತಿಗೆ ಕೊಂಡಿ', render_as='pdf'),
+            LinkField(name='pratisangraha_link', label='ಪ್ರಸಂಗಪ್ರತಿಸಂಗ್ರಹದಲ್ಲಿ ಪ್ರತಿಗೆ ಕೊಂಡಿ', render_as='pdf'),
+        ],
+        date_fields=[],
+        sortable_fields={
+            'entry_id': 'entry_id',
+            'title': 'prasanga_name',
+        },
+        filterable_fields=['prasanga_name', 'unique_number', 'type', 'publish_status',
+                            'prasanga_type', 'prasanga_language', 'story_source'],
+        groupable_fields=[
+            GroupableField(name='type', label='ವಿಧ'),
+            GroupableField(name='publish_status', label='ಪ್ರಕಟಿತವೇ?'),
+            GroupableField(name='prasanga_type', label='ಪ್ರಸಂಗ ವಿಧ'),
+            GroupableField(name='prasanga_language', label='ಪ್ರಸಂಗ ಭಾಷೆ'),
+            GroupableField(name='story_source', label='ಆಧಾರ ಗ್ರಂಥ'),
+        ],
+        display_fields=[
+            DisplayField(name='unique_number', label='ಅನನ್ಯ ಸಂಖ್ಯೆ'),
+            DisplayField(name='type', label='ವಿಧ'),
+            DisplayField(name='publish_status', label='ಪ್ರಕಟಿತವೇ?'),
+            DisplayField(name='prasanga_type', label='ಪ್ರಸಂಗ ವಿಧ'),
+            DisplayField(name='prasanga_language', label='ಪ್ರಸಂಗ ಭಾಷೆ'),
+            DisplayField(name='story_source', label='ಆಧಾರ ಗ್ರಂಥ'),
+            DisplayField(name='kavi', label='ಪ್ರಸಂಗ ಕವಿ', kind='taxonomy-multi'),
+        ],
+    ),
 }
 
 

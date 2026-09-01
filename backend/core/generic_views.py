@@ -467,7 +467,7 @@ class EntryListView(APIView):
     GET /api/v1/<project>/resources/entries
       ?fstring=X                    — free-text OR search across title/notes/filterable fields
       ?<filterable_field>=X         — icontains filter on a specific field
-      ?has_link=true                — only entries where the first non-array link field is set
+      ?has_link=true                — only entries where at least one non-array link field is set
       ?sort=<key>&order=asc|desc    — key must be one of schema.sortable_fields
       ?pageno=N                     — optional; omit to get everything at once
     """
@@ -487,8 +487,10 @@ class EntryListView(APIView):
             if params.get('has_link') == 'true':
                 pdf_fields = [lf for lf in schema.link_fields if not lf.is_array]
                 if pdf_fields:
-                    field_name = pdf_fields[0].name
-                    qs = qs.exclude(**{f'{field_name}__isnull': True}).exclude(**{field_name: ''})
+                    has_any_link = Q()
+                    for lf in pdf_fields:
+                        has_any_link |= Q(**{f'{lf.name}__isnull': False}) & ~Q(**{lf.name: ''})
+                    qs = qs.filter(has_any_link)
 
         sort_key = params.get('sort')
         order_field = schema.sortable_fields.get(sort_key, 'id')

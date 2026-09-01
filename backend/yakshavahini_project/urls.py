@@ -26,3 +26,6 @@ for slug in PROJECT_REGISTRY:
 urlpatterns.append(
     path('api/v1/drishyashravyakosha/', include('drishyashravyakosha.urls'))
 )
+urlpatterns.append(
+    path('api/v1/prasangayadi/', include('prasangayadi.urls'))
+)
