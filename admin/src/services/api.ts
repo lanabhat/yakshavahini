@@ -298,11 +298,15 @@ export const updateUser = (id: number, data: { role?: string; is_active?: boolea
 export const createUser = (data: { email: string; role: string; name?: string }) =>
   api.post<User & { password: string }>('/api/v1/admin/users/', data);
 
-// ── Drishya-Kavya Sanchaya CSV import ────────────────────────────────────
-// Project-specific (not schema-driven) — see backend/drishyashravyakosha/
-// csv_import.py. `clear` mirrors the management command's --yes /
-// confirmed path: true wipes existing entries first, false only imports
-// rows whose subject isn't already in the database.
+// ── CSV import ───────────────────────────────────────────────────────────
+// Project-specific (not schema-driven) — each project with an import-csv/
+// endpoint has its own backend csv_import.py with its own column mapping
+// (see backend/drishyashravyakosha/csv_import.py,
+// backend/prasangayadi/csv_import.py). `clear` mirrors each management
+// command's --yes / confirmed path: true wipes existing entries first,
+// false only imports rows not already in the database. Only projects
+// listed in admin/src/components/Shell/Shell.tsx's CSV_IMPORTABLE_PROJECTS
+// actually have this endpoint — calling it for any other project 404s.
 export interface CsvImportSummary {
   total_rows: number;
   existing_before: number;
@@ -312,7 +316,7 @@ export interface CsvImportSummary {
   skipped_blank: number;
 }
 
-export const importDrishyaShravyaCsv = (project: ProjectConfig, file: File, clear: boolean) => {
+export const importCsv = (project: ProjectConfig, file: File, clear: boolean) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('clear', String(clear));

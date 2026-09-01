@@ -55,6 +55,15 @@ export const PROJECTS: ProjectConfig[] = [
       { name: 'presenters', label: 'ಉಪನ್ಯಾಸಕರು', multi: true },
     ],
   },
+  {
+    slug: 'prasangayadi',
+    apiBase: '/api/v1/prasangayadi',
+    name: 'Prasanga Yadi',
+    titleField: 'prasanga_name',
+    taxonomyFields: [
+      { name: 'kavi', label: 'ಪ್ರಸಂಗ ಕವಿ', multi: true },
+    ],
+  },
 ];
 
 export const getProject = (slug?: string): ProjectConfig =>

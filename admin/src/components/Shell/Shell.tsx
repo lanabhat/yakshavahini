@@ -5,6 +5,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProject } from '@/contexts/ProjectContext';
 import { PROJECTS } from '@/config/projects';
 
+// Projects with a backend import-csv/ endpoint (see backend/<app>/csv_import.py
+// and backend/<app>/urls.py for each) — gates the "Import CSV" nav item so it
+// doesn't show for projects with no such endpoint (which would just 404).
+const CSV_IMPORTABLE_PROJECTS = ['drishyashravyakosha', 'prasangayadi'];
+
 const Shell: React.FC = () => {
   const { user, role, logout } = useAuth();
   const { project, setProjectSlug } = useProject();
@@ -18,7 +23,7 @@ const Shell: React.FC = () => {
     { label: 'Deletion Requests', href: '/deletions', icon: Trash2, roles: ['editor', 'admin'] },
     { label: 'Landing Page', href: '/landing-page', icon: FileText, roles: ['editor', 'admin'] },
     { label: 'Home Page', href: '/home-page', icon: Home, roles: ['editor', 'admin'] },
-    ...(project.slug === 'drishyashravyakosha' ? [{ label: 'Import CSV', href: '/import-csv', icon: Upload, roles: ['admin'] }] : []),
+    ...(CSV_IMPORTABLE_PROJECTS.includes(project.slug) ? [{ label: 'Import CSV', href: '/import-csv', icon: Upload, roles: ['admin'] }] : []),
     { label: 'Drive Accounts', href: '/drive-accounts', icon: HardDrive, roles: ['admin'] },
     { label: 'Users', href: '/users', icon: Users, roles: ['admin'] },
   ];

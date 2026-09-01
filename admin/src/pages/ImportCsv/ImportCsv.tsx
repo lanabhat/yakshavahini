@@ -1,15 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { importDrishyaShravyaCsv } from '@/services/api';
+import { importCsv } from '@/services/api';
 import type { CsvImportSummary } from '@/services/api';
 import { useProject } from '@/contexts/ProjectContext';
 
-// Only wired up for Drishya-Kavya Sanchaya so far (see backend/
-// drishyashravyakosha/csv_import.py) — the CSV column mapping is
-// project-specific, not schema-driven like the rest of the admin app.
-// EntryFormRouter.tsx-style: extend this page (or add a sibling) if
-// another project needs the same "import from CSV" capability later.
+// Generic across every project that has an import-csv/ endpoint (see
+// CSV_IMPORTABLE_PROJECTS in components/Shell/Shell.tsx) — the CSV column
+// mapping itself is project-specific, not schema-driven like the rest of
+// the admin app (see e.g. backend/drishyashravyakosha/csv_import.py,
+// backend/prasangayadi/csv_import.py).
 const ImportCsv: React.FC = () => {
   const { project } = useProject();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -33,7 +33,7 @@ const ImportCsv: React.FC = () => {
     setImporting(true);
     setSummary(null);
     try {
-      const res = await importDrishyaShravyaCsv(project, file, clearExisting);
+      const res = await importCsv(project, file, clearExisting);
       setSummary(res.data);
       toast.success('Import finished');
       setFile(null);
@@ -52,8 +52,7 @@ const ImportCsv: React.FC = () => {
         Import CSV
       </h1>
       <p style={{ fontSize: 13, color: 'var(--ps-muted)', marginBottom: 20 }}>
-        Bulk-import {project.name} entries from a CSV export. Expected columns:
-        event_type, subject, date, presenter, video_link.
+        Bulk-import {project.name} entries from a CSV export matching this project's expected format.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -71,7 +70,7 @@ const ImportCsv: React.FC = () => {
             Delete all existing {project.name} entries first, then import every row.
             <br />
             <span style={{ color: 'var(--ps-faint)' }}>
-              If left unchecked, only rows whose subject isn&apos;t already in the database are imported — existing entries are left untouched.
+              If left unchecked, only rows whose title isn&apos;t already in the database are imported — existing entries are left untouched.
             </span>
           </span>
         </label>
@@ -93,8 +92,8 @@ const ImportCsv: React.FC = () => {
             <div>{summary.total_rows} row(s) in the file.</div>
             {summary.deleted > 0 && <div>Deleted {summary.deleted} existing entr{summary.deleted === 1 ? 'y' : 'ies'}.</div>}
             <div>Created {summary.created} entr{summary.created === 1 ? 'y' : 'ies'}.</div>
-            {summary.skipped_existing > 0 && <div>Skipped {summary.skipped_existing} already-present (by subject).</div>}
-            {summary.skipped_blank > 0 && <div>Skipped {summary.skipped_blank} blank-subject row(s).</div>}
+            {summary.skipped_existing > 0 && <div>Skipped {summary.skipped_existing} already-present (by title).</div>}
+            {summary.skipped_blank > 0 && <div>Skipped {summary.skipped_blank} blank-title row(s).</div>}
           </div>
         )}
       </div>
