@@ -22,6 +22,11 @@ export interface ProjectConfig {
   // Which entry field holds the primary document link. Defaults to
   // "pdf_link" (Mattukosha/Pustaka Kosha's convention) when unset.
   linkField?: string;
+  // Additional field names to try, in order, when `linkField` is empty —
+  // first non-empty one wins. For a project with more than one candidate
+  // document link (e.g. Prasanga Yadi's Kosha link vs Pratisangraha link,
+  // both Drive-hosted), rather than one primary link field.
+  linkFieldFallbacks?: string[];
   // Which entry field holds a single primary video/broadcast link (as
   // opposed to `youtube_video_links`, an array of supplementary videos).
   // When set, EntryCard/EntryDetail read this field, embed it inline if
@@ -151,6 +156,36 @@ export const PROJECTS: ProjectConfig[] = [
       { field: 'presenters', label: 'ಉಪನ್ಯಾಸಕರು' },
     ],
     cardDescription: (n) => `${n} ಅಂತರ್ಜಾಲ ಪ್ರಸಾರ ಕಾರ್ಯಕ್ರಮಗಳ ವಿವರ`,
+  },
+  {
+    slug: 'prasangayadi',
+    apiBase: '/api/v1/prasangayadi',
+    name: 'Prasanga Yadi',
+    nameKannada: 'ಪ್ರಸಂಗಯಾದಿ',
+    active: true,
+    titleField: 'prasanga_name',
+    linkField: 'prasanga_kosha_link',
+    linkFieldFallbacks: ['pratisangraha_link'],
+    displayFields: [
+      { name: 'unique_number', label: 'ಅನನ್ಯ ಸಂಖ್ಯೆ', kind: 'text' },
+      { name: 'type', label: 'ವಿಧ', kind: 'text' },
+      { name: 'publish_status', label: 'ಪ್ರಕಟಿತವೇ?', kind: 'text' },
+      { name: 'prasanga_type', label: 'ಪ್ರಸಂಗ ವಿಧ', kind: 'text' },
+      { name: 'prasanga_language', label: 'ಪ್ರಸಂಗ ಭಾಷೆ', kind: 'text' },
+      { name: 'story_source', label: 'ಆಧಾರ ಗ್ರಂಥ', kind: 'text' },
+      { name: 'kavi', label: 'ಪ್ರಸಂಗ ಕವಿ', kind: 'taxonomy-multi' },
+    ],
+    groupFacets: [
+      { field: 'type', label: 'ವಿಧ' },
+      { field: 'publish_status', label: 'ಪ್ರಕಟಿತವೇ?' },
+      { field: 'prasanga_type', label: 'ಪ್ರಸಂಗ ವಿಧ' },
+      { field: 'prasanga_language', label: 'ಪ್ರಸಂಗ ಭಾಷೆ' },
+      { field: 'story_source', label: 'ಆಧಾರ ಗ್ರಂಥ' },
+    ],
+    taxonomyFacets: [
+      { field: 'kavi', label: 'ಪ್ರಸಂಗ ಕವಿ' },
+    ],
+    cardDescription: (n) => `${n} ಯಕ್ಷಗಾನ ಪ್ರಸಂಗಗಳ ಪಟ್ಟಿ`,
   },
 ];
 

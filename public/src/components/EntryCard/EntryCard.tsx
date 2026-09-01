@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Entry, FontSize } from '@/services/api';
 import { useProject } from '@/contexts/ProjectContext';
-import { subtitleValue, displayFieldValue } from '@/lib/fieldDisplay';
+import { subtitleValue, displayFieldValue, resolveDocumentLink } from '@/lib/fieldDisplay';
 
 export const DATE_FIELD_KEY = '__date__';
 
@@ -23,8 +23,8 @@ interface Props {
 const EntryCard: React.FC<Props> = ({ entry, listFields }) => {
   const project = useProject();
   const navigate = useNavigate();
-  const linkValue = (entry[project.linkField || 'pdf_link'] as string) || '';
-  const hasPdf = linkValue.startsWith('http');
+  const linkValue = resolveDocumentLink(entry, project);
+  const hasPdf = !!linkValue;
   const videoLinks = entry.youtube_video_links as string[] | undefined;
   const primaryVideoLink = project.videoLinkField ? (entry[project.videoLinkField] as string) || '' : '';
   const hasVideo = (!!videoLinks && videoLinks.length > 0) || primaryVideoLink.startsWith('http');

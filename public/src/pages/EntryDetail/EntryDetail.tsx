@@ -5,7 +5,7 @@ import { fetchEntry } from '@/services/api';
 import type { Entry } from '@/services/api';
 import { extractYoutubeId } from '@/lib/youtube';
 import { useProject } from '@/contexts/ProjectContext';
-import { displayFieldValue } from '@/lib/fieldDisplay';
+import { displayFieldValue, resolveDocumentLink } from '@/lib/fieldDisplay';
 
 // Handles Drive-hosted PDFs (/file/d/<id>), native Google Docs/Sheets/Slides
 // (/document|spreadsheets|presentation/d/<id>), the older ?id= share format,
@@ -40,11 +40,12 @@ const EntryDetail: React.FC = () => {
     return <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--ps-muted)' }}>Not found</div>;
   }
 
-  const pdfLinkRaw = (entry[project.linkField || 'pdf_link'] as string) || '';
   // Some entries have placeholder text (e.g. "yet to be compiled") instead of
-  // a real URL in this field — only treat it as a link if it actually looks
-  // like one, matching the same guard EntryCard/EntryListRow already use.
-  const pdfLink = pdfLinkRaw.startsWith('http') ? pdfLinkRaw : '';
+  // a real URL in this field — resolveDocumentLink only returns a value that
+  // actually looks like a URL, matching the same guard EntryCard/
+  // EntryListRow use. For a project with more than one candidate link
+  // (linkFieldFallbacks), this also picks the first one that's present.
+  const pdfLink = resolveDocumentLink(entry, project);
   const pdfEmbed = getDocEmbedUrl(pdfLink);
   const videoLinks = (entry.youtube_video_links as string[]) || [];
   const videoIds = videoLinks.map(extractYoutubeId).filter(Boolean) as string[];

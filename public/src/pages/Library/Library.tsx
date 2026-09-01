@@ -35,6 +35,7 @@ const Library: React.FC = () => {
   const listFields = useListDisplayFields(project);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [hasLinkOnly, setHasLinkOnly] = useState(false);
 
   const facetParams = Object.fromEntries(Object.values(groupFilters).map((f) => [f.paramKey, f.value]));
 
@@ -46,6 +47,7 @@ const Library: React.FC = () => {
         sort: sortField,
         order: sortOrder,
         pageno: page * PAGE_SIZE,
+        has_link: hasLinkOnly ? 'true' : undefined,
         ...facetParams,
       });
       setEntries(res.data.dataset);
@@ -56,7 +58,7 @@ const Library: React.FC = () => {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project, searchText, sortField, sortOrder, groupFilters, page]);
+  }, [project, searchText, sortField, sortOrder, groupFilters, page, hasLinkOnly]);
 
   useEffect(() => {
     const t = setTimeout(load, 300);
@@ -69,7 +71,7 @@ const Library: React.FC = () => {
     setSearchParams(next, { replace: true });
   }, [searchText, setSearchParams]);
 
-  useEffect(() => { setPage(0); }, [project, searchText, sortField, sortOrder, groupFilters]);
+  useEffect(() => { setPage(0); }, [project, searchText, sortField, sortOrder, groupFilters, hasLinkOnly]);
 
   const handleGroupChange = (field: string, facet: ActiveFacet | null) => {
     setGroupFilters((prev) => {
@@ -155,6 +157,12 @@ const Library: React.FC = () => {
                 </button>
               ))}
             </div>
+            {project.linkField && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--ps-muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <input type="checkbox" checked={hasLinkOnly} onChange={(e) => setHasLinkOnly(e.target.checked)} />
+                Only entries with a document link
+              </label>
+            )}
             {activeEntries.map(([field, facet]) => (
               <span key={field} style={{
                 display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, padding: '5px 10px',

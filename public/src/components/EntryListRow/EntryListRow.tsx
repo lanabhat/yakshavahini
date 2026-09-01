@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Entry, FontSize } from '@/services/api';
 import { useProject } from '@/contexts/ProjectContext';
-import { subtitleValue, displayFieldValue } from '@/lib/fieldDisplay';
+import { subtitleValue, displayFieldValue, resolveDocumentLink } from '@/lib/fieldDisplay';
 import type { ResolvedListField } from '@/components/EntryCard/EntryCard';
 
 const FONT_SIZE_PX: Record<FontSize, number> = { sm: 11, md: 12.5, lg: 14 };
@@ -15,8 +15,8 @@ interface Props {
 const EntryListRow: React.FC<Props> = ({ entry, listFields }) => {
   const project = useProject();
   const navigate = useNavigate();
-  const linkValue = (entry[project.linkField || 'pdf_link'] as string) || '';
-  const hasPdf = linkValue.startsWith('http');
+  const linkValue = resolveDocumentLink(entry, project);
+  const hasPdf = !!linkValue;
   const primaryVideoLink = project.videoLinkField ? (entry[project.videoLinkField] as string) || '' : '';
   const hasVideo = primaryVideoLink.startsWith('http');
   const title = (entry[project.titleField] as string) || '—';
