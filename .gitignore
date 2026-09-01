@@ -2,4 +2,5 @@ venv/
 .firebase/
 *.csv
 *.xlsx
+*.xls
 
